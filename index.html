@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qadam Learns to Think</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Layout idea: a long illustrated book with a sticky chapter rail; steppe-sky blue + sun gold from the Kazakh flag */
+  --paper: #f4f6f8;
+  --page: #ffffff;
+  --ink: #17212e;
+  --muted: #5b6878;
+  --sky: #0088a3;
+  --sun: #c98a00;
+  --line: #d9dfe6;
+  --tint: #e6f3f6;
+  --gold-tint: #fbf1d9;
+  --good: #1f8a4c;
+  --bad: #c0392b;
+  --display: "Unbounded", "Segoe UI", system-ui, sans-serif;
+  --body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0f151d; --page: #151d27; --ink: #e6ebf1; --muted: #9aa7b6;
+    --sky: #3cc4dc; --sun: #f0b93a; --line: #2a3644; --tint: #13303a; --gold-tint: #33290f;
+    --good: #4cc483; --bad: #ef7b6c; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0f151d; --page: #151d27; --ink: #e6ebf1; --muted: #9aa7b6;
+  --sky: #3cc4dc; --sun: #f0b93a; --line: #2a3644; --tint: #13303a; --gold-tint: #33290f;
+  --good: #4cc483; --bad: #ef7b6c; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; animation: none !important; } }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 18px/1.65 var(--body); }
+a { color: var(--sky); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.2; text-wrap: balance; font-weight: 700; }
+h2 { font-size: 1.7rem; margin: 0 0 .4rem; }
+h3 { font-size: 1.1rem; margin: 2rem 0 .5rem; }
+p, li { max-width: 68ch; }
+code, .mono { font-family: var(--mono); font-size: .88em; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* shell */
+.shell { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 32px; max-width: 1240px; margin: 0 auto; padding: 0 16px; }
+nav.rail { position: sticky; top: 0; align-self: start; max-height: 100vh; overflow-y: auto; padding: 24px 0; font-family: var(--sans); font-size: .9rem; }
+nav.rail .brand { font-family: var(--display); font-size: 1rem; margin-bottom: 1rem; }
+nav.rail ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
+nav.rail a { display: grid; grid-template-columns: 2.2em 1fr; padding: 6px 8px; border-radius: 6px; color: var(--ink); text-decoration: none; }
+nav.rail a:hover { background: var(--tint); }
+nav.rail a span:first-child { color: var(--muted); font-variant-numeric: tabular-nums; }
+main { padding: 24px 0 80px; min-width: 0; }
+@media (max-width: 900px) {
+  .shell { grid-template-columns: 1fr; }
+  nav.rail { position: static; max-height: none; padding-bottom: 0; }
+  nav.rail ol { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+}
+
+/* chapters */
+section.chapter { background: var(--page); border: 1px solid var(--line); border-radius: 14px; padding: 36px 40px; margin-bottom: 28px; }
+@media (max-width: 600px) { section.chapter { padding: 24px 18px; } body { font-size: 17px; } }
+.chapter-head { display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; align-items: end; border-bottom: 2px solid var(--ink); padding-bottom: 14px; margin-bottom: 22px; }
+.chapter-head .week { grid-row: span 2; font-family: var(--display); font-size: 3.2rem; line-height: 1; color: var(--sky); }
+.chapter-head .kicker { font-family: var(--sans); font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.story { border-left: 4px solid var(--sun); background: var(--gold-tint); padding: 14px 18px; border-radius: 0 10px 10px 0; font-style: italic; }
+.story b { font-style: normal; font-family: var(--sans); }
+.box { border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; margin: 18px 0; }
+.box.dyk { background: var(--tint); border-color: transparent; }
+.box .label { font-family: var(--sans); font-weight: 600; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--sky); display: block; margin-bottom: 4px; }
+.formula { font-family: var(--mono); background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; overflow-x: auto; white-space: pre; font-size: .9rem; line-height: 1.5; }
+.mythfact { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 18px 0; }
+.mythfact > div { border-radius: 10px; padding: 12px 16px; font-size: .95rem; }
+.mythfact .myth { background: color-mix(in srgb, var(--bad) 12%, transparent); }
+.mythfact .fact { background: color-mix(in srgb, var(--good) 12%, transparent); }
+.mythfact b { font-family: var(--sans); display: block; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }
+@media (max-width: 600px) { .mythfact { grid-template-columns: 1fr; } }
+.tablewrap { overflow-x: auto; margin: 14px 0; }
+table { border-collapse: collapse; font-family: var(--sans); font-size: .9rem; min-width: 100%; }
+th, td { border-bottom: 1px solid var(--line); padding: 7px 10px; text-align: left; vertical-align: top; }
+th { background: var(--paper); font-weight: 600; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+figure { margin: 22px 0; }
+figure svg { width: 100%; height: auto; max-width: 760px; display: block; color: var(--ink); }
+figcaption { font-family: var(--sans); font-size: .85rem; color: var(--muted); margin-top: 6px; max-width: 68ch; }
+details.quiz { border: 1px solid var(--line); border-radius: 10px; padding: 10px 16px; margin: 10px 0; font-family: var(--sans); font-size: .95rem; }
+details.quiz summary { cursor: pointer; font-weight: 600; }
+details.quiz p { margin: .5rem 0 0; }
+.quizhead { font-family: var(--display); font-size: 1rem; margin-top: 2rem; }
+
+/* demos */
+.demo { border: 2px solid var(--sky); border-radius: 12px; padding: 16px 18px; margin: 24px 0; font-family: var(--sans); font-size: .95rem; }
+.demo h4 { font-family: var(--display); font-size: .95rem; margin: 0 0 .6rem; color: var(--sky); }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0; }
+button { font: 600 .88rem var(--sans); background: var(--sky); color: #fff; border: 0; border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+button.ghost { background: transparent; color: var(--sky); border: 1px solid var(--sky); }
+button:hover { filter: brightness(1.08); }
+label { font-size: .9rem; }
+input[type=range] { width: 160px; vertical-align: middle; }
+.readout { font-family: var(--mono); font-size: .9rem; background: var(--paper); border-radius: 8px; padding: 8px 12px; overflow-x: auto; }
+.grid-demo { display: grid; gap: 2px; max-width: 520px; touch-action: manipulation; }
+.grid-demo div { aspect-ratio: 1; border-radius: 3px; background: var(--paper); border: 1px solid var(--line); }
+.grid-demo .wall { background: var(--ink); border-color: var(--ink); }
+.grid-demo .seen { background: color-mix(in srgb, var(--sky) 25%, var(--page)); }
+.grid-demo .path { background: var(--sun); border-color: var(--sun); }
+.grid-demo .start, .grid-demo .goal { background: var(--good); border-color: var(--good); }
+.grid-demo .goal { background: var(--bad); border-color: var(--bad); }
+.vi-grid { display: grid; grid-template-columns: repeat(4, minmax(60px, 90px)); gap: 4px; font-family: var(--mono); }
+.vi-grid div { border: 1px solid var(--line); border-radius: 6px; padding: 10px 4px; text-align: center; font-size: .9rem; }
+.vi-grid .arrow { display: block; font-size: 1.2rem; color: var(--sun); }
+.bar { height: 22px; background: var(--sky); border-radius: 4px; transition: width .3s; }
+.barrow { display: grid; grid-template-columns: 90px 1fr 70px; gap: 10px; align-items: center; margin: 4px 0; font-family: var(--mono); font-size: .9rem; }
+canvas { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--page); }
+
+/* cover */
+.cover { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 28px; align-items: center; background: var(--ink); color: #f4f6f8; border-radius: 16px; padding: 40px; margin-bottom: 28px; overflow: hidden; }
+.cover h1 { font-size: clamp(2rem, 5vw, 3.4rem); margin: .2rem 0 .8rem; color: #fff; }
+.cover .sub { font-family: var(--sans); color: #b9c6d3; max-width: 46ch; }
+.cover .kicker { font-family: var(--sans); letter-spacing: .14em; text-transform: uppercase; font-size: .8rem; color: #f0b93a; }
+.cover .meta { font-family: var(--sans); font-size: .85rem; color: #b9c6d3; margin-top: 1.4rem; }
+.cover svg { width: 100%; height: auto; max-width: 440px; justify-self: center; }
+@media (max-width: 800px) { .cover { grid-template-columns: 1fr; padding: 26px; } }
+.timeline { list-style: none; padding: 0; margin: 0; display: grid; gap: 0; border-left: 3px solid var(--sky); }
+.timeline li { padding: 6px 0 10px 18px; position: relative; max-width: none; }
+.timeline li::before { content: ""; position: absolute; left: -8px; top: 14px; width: 13px; height: 13px; border-radius: 50%; background: var(--sun); }
+.timeline .yr { font-family: var(--mono); font-weight: 600; color: var(--sky); margin-right: 8px; }
+.twocol { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 700px) { .twocol { grid-template-columns: 1fr; } }
+.cast { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.cast > div { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font-family: var(--sans); font-size: .92rem; }
+.cast b { font-family: var(--display); font-size: .95rem; }
+dl.gloss { display: grid; grid-template-columns: minmax(140px, 220px) 1fr; gap: 6px 18px; font-size: .95rem; }
+dl.gloss dt { font-family: var(--sans); font-weight: 600; }
+dl.gloss dd { margin: 0; }
+@media (max-width: 600px) { dl.gloss { grid-template-columns: 1fr; } dl.gloss dd { margin-bottom: 8px; } }
+ol.refs li { margin-bottom: 6px; font-size: .95rem; }
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="rail" aria-label="Chapters">
+  <div class="brand">Qadam Learns to Think</div>
+  <ol>
+    <li><a href="#cover"><span>·</span><span>Cover</span></a></li>
+    <li><a href="#prologue"><span>0</span><span>Prologue &amp; cast</span></a></li>
+    <li><a href="#ch1"><span>1</span><span>Agents &amp; environments</span></a></li>
+    <li><a href="#ch2"><span>2</span><span>Search, A* &amp; heuristics</span></a></li>
+    <li><a href="#ch3"><span>3</span><span>Local search &amp; CSP</span></a></li>
+    <li><a href="#ch4"><span>4</span><span>Adversarial search</span></a></li>
+    <li><a href="#ch5"><span>5</span><span>MDPs &amp; reinforcement learning</span></a></li>
+    <li><a href="#ch6"><span>6</span><span>Probability &amp; Bayes nets</span></a></li>
+    <li><a href="#ch7"><span>7</span><span>Hidden Markov models</span></a></li>
+    <li><a href="#ch8"><span>8</span><span>Decisions &amp; classical ML</span></a></li>
+    <li><a href="#ch9"><span>9</span><span>Perceptrons &amp; neural nets</span></a></li>
+    <li><a href="#ch10"><span>10</span><span>LLMs, GenAI &amp; safety</span></a></li>
+    <li><a href="#epilogue"><span>·</span><span>Epilogue, myths &amp; timeline</span></a></li>
+    <li><a href="#glossary"><span>·</span><span>Glossary</span></a></li>
+    <li><a href="#refs"><span>·</span><span>Sources &amp; AI use</span></a></li>
+  </ol>
+</nav>
+<main>
+
+<header class="cover" id="cover">
+  <div>
+    <div class="kicker">AI Fundamentals · An illustrated interactive book</div>
+    <h1>Qadam Learns to Think</h1>
+    <p class="sub">A warehouse robot in Astana goes from a box of sensors to a thinking machine, one week of the course at a time: search, games, uncertainty, learning and finally language.</p>
+    <p class="sub">Ten chapters, eight live experiments you can run in this page, worked examples with real numbers, quizzes with answers and a glossary.</p>
+    <div class="meta">QAIRU · AIF1303 AI Fundamentals · 2026 · Team ___</div>
+  </div>
+  <svg viewBox="0 0 440 360" role="img" aria-label="Qadam, a small warehouse robot, stands under a golden sun on a grid of warehouse zones">
+    <circle cx="330" cy="80" r="46" fill="#f0b93a"/>
+    <g stroke="#f0b93a" stroke-width="3" stroke-linecap="round" opacity=".8">
+      <line x1="330" y1="16" x2="330" y2="4"/><line x1="384" y1="40" x2="394" y2="32"/><line x1="394" y1="80" x2="408" y2="80"/>
+      <line x1="276" y1="40" x2="266" y2="32"/><line x1="384" y1="120" x2="394" y2="128"/><line x1="276" y1="120" x2="266" y2="128"/>
+    </g>
+    <g stroke="#3cc4dc" stroke-width="1.2" opacity=".55">
+      <line x1="20" y1="300" x2="420" y2="300"/><line x1="20" y1="330" x2="420" y2="330"/><line x1="20" y1="270" x2="420" y2="270"/>
+      <line x1="60" y1="260" x2="40" y2="350"/><line x1="140" y1="260" x2="130" y2="350"/><line x1="220" y1="260" x2="220" y2="350"/>
+      <line x1="300" y1="260" x2="310" y2="350"/><line x1="380" y1="260" x2="400" y2="350"/>
+    </g>
+    <g transform="translate(150 96)">
+      <line x1="70" y1="0" x2="70" y2="26" stroke="#e6ebf1" stroke-width="4"/>
+      <circle cx="70" cy="0" r="7" fill="#f0b93a"/>
+      <rect x="20" y="26" width="100" height="74" rx="18" fill="#e6ebf1"/>
+      <rect x="34" y="44" width="72" height="36" rx="12" fill="#17212e"/>
+      <circle cx="56" cy="62" r="7" fill="#3cc4dc"/><circle cx="84" cy="62" r="7" fill="#3cc4dc"/>
+      <rect x="10" y="106" width="120" height="76" rx="14" fill="#0088a3"/>
+      <rect x="40" y="122" width="60" height="30" rx="6" fill="#17212e"/>
+      <text x="70" y="143" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="13" fill="#f0b93a">A* ✓</text>
+      <rect x="-8" y="116" width="16" height="50" rx="8" fill="#e6ebf1"/><rect x="132" y="116" width="16" height="50" rx="8" fill="#e6ebf1"/>
+      <circle cx="36" cy="190" r="14" fill="#e6ebf1"/><circle cx="104" cy="190" r="14" fill="#e6ebf1"/>
+    </g>
+    <text x="24" y="44" font-family="IBM Plex Mono, monospace" font-size="13" fill="#b9c6d3">P(path clear | sensor) = ?</text>
+    <text x="24" y="66" font-family="IBM Plex Mono, monospace" font-size="13" fill="#b9c6d3">f(n) = g(n) + h(n)</text>
+  </svg>
+</header>
+
+<section class="chapter" id="prologue">
+  <div class="chapter-head"><div class="week">0</div><div class="kicker">Prologue</div><h2>Meet Qadam</h2></div>
+  <div class="story"><span class="avatar" data-avatar="qadam"></span><p>A new robot rolls off the delivery truck at a logistics warehouse on the left bank of Astana. Its job: carry boxes between three zones, A, B and C. Its name is <b>Qadam</b>, Kazakh for "step". Today it cannot do anything clever. It has wheels, a camera and a sensor that sometimes lies. By the last chapter it will plan routes, play games, reason under uncertainty, learn from data and even talk. Every chapter is one week of the AI Fundamentals course.</p></div>
+  <h3>The cast</h3>
+  <div class="cast">
+    <div><span class="avatar" data-avatar="qadam"></span><b>Qadam</b><br>The learner. A warehouse robot that improves one skill per chapter.</div>
+    <div><span class="avatar" data-avatar="aru"></span><b>Aru</b><br>A first-year Physical AI student who programs Qadam and asks the questions a reader would ask.</div>
+    <div><span class="avatar" data-avatar="bilim"></span><b>Professor Bilim</b><br>"Bilim" means "knowledge". Explains each idea and checks every number.</div>
+    <div><b>The Fog</b><br>Uncertainty itself: noisy sensors, hidden states and an unknown future.</div>
+  </div>
+  <h3>How to read this book</h3>
+  <ul>
+    <li>The <b>gold story boxes</b> follow Qadam. The plain text explains the concept precisely.</li>
+    <li><b>Blue frames</b> are live experiments. Press the buttons; nothing is pre-recorded, the algorithms run in your browser.</li>
+    <li>Each chapter ends with a <b>mini-quiz</b>. Click a question to reveal the answer.</li>
+    <li>All worked numbers were recomputed in Python before publishing. Sources are listed at the end.</li>
+  </ul>
+  <figure>
+    <svg viewBox="0 0 760 120" role="img" aria-label="The book's path: from agents and search, through games and uncertainty, to learning and language models">
+      <defs><marker id="arP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+      <g font-family="IBM Plex Sans, sans-serif" font-size="13" text-anchor="middle" fill="currentColor">
+        <rect x="10" y="30" width="130" height="56" rx="10" fill="none" stroke="currentColor"/><text x="75" y="54">Weeks 1–3</text><text x="75" y="72">Agents &amp; search</text>
+        <rect x="160" y="30" width="130" height="56" rx="10" fill="none" stroke="currentColor"/><text x="225" y="54">Week 4</text><text x="225" y="72">Games</text>
+        <rect x="310" y="30" width="130" height="56" rx="10" fill="none" stroke="currentColor"/><text x="375" y="54">Week 5</text><text x="375" y="72">Rewards (MDP, RL)</text>
+        <rect x="460" y="30" width="130" height="56" rx="10" fill="none" stroke="currentColor"/><text x="525" y="54">Weeks 6–7</text><text x="525" y="72">Uncertainty</text>
+        <rect x="610" y="30" width="140" height="56" rx="10" fill="none" stroke="#0088a3" stroke-width="2"/><text x="680" y="54">Weeks 8–10</text><text x="680" y="72">Learning &amp; language</text>
+      </g>
+      <g stroke="currentColor" stroke-width="1.4" marker-end="url(#arP)"><line x1="140" y1="58" x2="158" y2="58"/><line x1="290" y1="58" x2="308" y2="58"/><line x1="440" y1="58" x2="458" y2="58"/><line x1="590" y1="58" x2="608" y2="58"/></g>
+      <text x="380" y="112" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="12" fill="currentColor" opacity=".7">from hand-written rules to systems that learn from data</text>
+    </svg>
+    <figcaption>The route through the book follows the syllabus: first the robot reasons with rules it is given, later it learns its own rules from data.</figcaption>
+  </figure>
+</section>
+
+<section class="chapter" id="ch1">
+  <div class="chapter-head"><div class="week">1</div><div class="kicker">Week 1 · Introduction to AI</div><h2>Agents and environments</h2></div>
+  <div class="story"><span class="avatar" data-avatar="aru"></span><p><b>Aru:</b> "So is Qadam intelligent yet?" <b>Professor Bilim:</b> "First tell me what it perceives, what it can do, and how we will judge it. Intelligence starts with a clear problem."</p></div>
+  <p>Artificial intelligence is the study of <b>agents</b>: anything that perceives its <b>environment</b> through <b>sensors</b> and acts on it through <b>actuators</b>. Everything an agent has perceived so far is its <b>percept sequence</b>; the rule that maps that history to an action is the <b>agent function</b>, and the program running on the hardware is the <b>agent program</b>.</p>
+  <p>A <b>rational agent</b> chooses the action that is expected to maximise its <b>performance measure</b>, given its percepts and built-in knowledge. Rational does not mean all-knowing: an agent that cannot see a hidden obstacle is not irrational for bumping into it, but it is irrational if it never uses the sensor that could have warned it.</p>
+  <figure>
+    <svg viewBox="0 0 760 200" role="img" aria-label="The agent-environment loop: the environment sends percepts to the agent's sensors, the agent program chooses an action, actuators send the action back to the environment">
+      <defs><marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+      <g font-family="IBM Plex Sans, sans-serif" font-size="13" fill="currentColor" text-anchor="middle">
+        <rect x="30" y="40" width="250" height="120" rx="12" fill="none" stroke="currentColor"/>
+        <text x="155" y="30" font-weight="600">Environment (the warehouse)</text>
+        <text x="155" y="92">boxes, shelves, people,</text><text x="155" y="110">other robots, obstacles</text>
+        <rect x="480" y="40" width="250" height="120" rx="12" fill="none" stroke="#0088a3" stroke-width="2"/>
+        <text x="605" y="30" font-weight="600">Agent (Qadam)</text>
+        <rect x="500" y="62" width="90" height="36" rx="6" fill="none" stroke="currentColor"/><text x="545" y="85">Sensors</text>
+        <rect x="620" y="62" width="90" height="36" rx="6" fill="none" stroke="currentColor"/><text x="665" y="85">Program</text>
+        <rect x="560" y="112" width="90" height="36" rx="6" fill="none" stroke="currentColor"/><text x="605" y="135">Actuators</text>
+        <text x="380" y="62">percepts</text><text x="380" y="78" font-size="11" opacity=".7">camera image, sensor = BLOCKED</text>
+        <text x="380" y="150">actions</text><text x="380" y="166" font-size="11" opacity=".7">move left, lift box</text>
+      </g>
+      <g stroke="currentColor" stroke-width="1.4" fill="none" marker-end="url(#ar1)">
+        <line x1="282" y1="88" x2="496" y2="80"/>
+        <line x1="558" y1="130" x2="284" y2="130"/>
+        <line x1="590" y1="80" x2="616" y2="80"/>
+        <path d="M665 98 V120 H652"/>
+      </g>
+    </svg>
+    <figcaption>Every chapter of this book upgrades only the box called "Program": the sensors and wheels stay the same, the reasoning gets smarter.</figcaption>
+  </figure>
+  <h3>PEAS: describing a task</h3>
+  <p>Before designing an agent we specify its task environment with <b>PEAS</b>: Performance measure, Environment, Actuators, Sensors.</p>
+  <div class="tablewrap"><table>
+    <tr><th>PEAS</th><th>Qadam, the warehouse robot</th><th>A self-driving taxi</th></tr>
+    <tr><td>Performance</td><td>Boxes delivered per hour, no collisions, low battery use</td><td>Safe, fast, legal, comfortable trip</td></tr>
+    <tr><td>Environment</td><td>Aisles, shelves, workers, other robots</td><td>Roads, traffic, pedestrians, weather</td></tr>
+    <tr><td>Actuators</td><td>Wheels, lift arm, warning light</td><td>Steering, brake, accelerator, signals</td></tr>
+    <tr><td>Sensors</td><td>Camera, obstacle sensor, wheel encoders, barcode reader</td><td>Cameras, lidar, radar, GPS, speedometer</td></tr>
+  </table></div>
+  <h3>Properties of environments</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Property</th><th>Meaning</th><th>Qadam's warehouse</th></tr>
+    <tr><td>Fully vs partially observable</td><td>Do sensors show the complete relevant state?</td><td>Partially: the sensor is noisy, aisles hide each other</td></tr>
+    <tr><td>Deterministic vs stochastic</td><td>Is the next state fully decided by the current state and action?</td><td>Stochastic: wheels slip, people move</td></tr>
+    <tr><td>Episodic vs sequential</td><td>Do current decisions affect future ones?</td><td>Sequential: a bad turn now costs time later</td></tr>
+    <tr><td>Static vs dynamic</td><td>Can the world change while the agent thinks?</td><td>Dynamic</td></tr>
+    <tr><td>Discrete vs continuous</td><td>Finite distinct states and actions, or real-valued?</td><td>Continuous in reality; we model it as a grid (discrete)</td></tr>
+    <tr><td>Single vs multi-agent</td><td>Are there other agents whose goals matter?</td><td>Multi-agent: other robots and workers</td></tr>
+  </table></div>
+  <h3>Five kinds of agent programs</h3>
+  <ol>
+    <li><b>Simple reflex</b>: if-then rules on the current percept only ("if BLOCKED then turn"). Fast, but fails when the world is partially observable.</li>
+    <li><b>Model-based reflex</b>: keeps an internal state (a map, the last known position) updated by a model of how the world works.</li>
+    <li><b>Goal-based</b>: chooses actions that lead to a goal ("reach zone C"), which needs search and planning (Chapters 2–3).</li>
+    <li><b>Utility-based</b>: compares how good outcomes are with a utility function, essential when goals conflict or outcomes are uncertain (Chapters 5 and 8).</li>
+    <li><b>Learning agent</b>: improves its own components from experience using a critic and a learning element (Chapters 5, 8, 9).</li>
+  </ol>
+  <div class="box dyk"><span class="label">Did you know?</span>The word "robot" comes from the Czech <i>robota</i>, "forced labour", first used in Karel Čapek's 1920 play <i>R.U.R.</i> The term "artificial intelligence" appeared in the 1955 proposal for the 1956 Dartmouth workshop by McCarthy, Minsky, Rochester and Shannon.</div>
+  <div class="mythfact"><div class="myth"><b>Myth</b>An intelligent agent must think like a human.</div><div class="fact"><b>Fact</b>AI usually aims for rational behaviour measured by a performance measure; a chess engine plays well without imitating human thought.</div></div>
+  <div class="quizhead">Mini-quiz</div>
+  <details class="quiz"><summary>1. Is a crossword-solving program in a fully or partially observable environment?</summary><p>Fully observable: the whole grid and all clues are visible. It is also deterministic, static and discrete.</p></details>
+  <details class="quiz"><summary>2. Why is a simple reflex agent a poor choice for Qadam?</summary><p>The warehouse is partially observable. Without memory of what it saw before, Qadam can loop forever between two blocked aisles. A model-based agent keeps a map and avoids that.</p></details>
+</section>
+
+<section class="chapter" id="ch2">
+  <div class="chapter-head"><div class="week">2</div><div class="kicker">Week 2 · Uninformed search, A* and heuristics</div><h2>Finding the way</h2></div>
+  <div class="story"><span class="avatar" data-avatar="aru"></span><p><b>Aru:</b> "Qadam, go from the loading dock to shelf G." Qadam knows the floor plan but not the route. It must <i>search</i> through possible paths before it moves a single wheel.</p></div>
+  <h3>Formulating a search problem</h3>
+  <p>A search problem has five parts: the <b>initial state</b> (Qadam at the dock), the <b>actions</b> available in each state (up, down, left, right), a <b>transition model</b> saying which state each action leads to, a <b>goal test</b> (am I at shelf G?) and a <b>path cost</b> (number of moves, or metres). A solution is a sequence of actions from the initial state to a goal; an optimal solution has the lowest path cost.</p>
+  <p>Search algorithms build a <b>search tree</b>. The <b>frontier</b> holds nodes generated but not yet expanded; the order in which the frontier is expanded is what distinguishes the algorithms.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Algorithm</th><th>Frontier</th><th>Complete?</th><th>Optimal?</th><th>Time</th><th>Memory</th></tr>
+    <tr><td>Breadth-first (BFS)</td><td>FIFO queue</td><td>Yes (finite b)</td><td>Yes, if all steps cost the same</td><td class="mono">O(b<sup>d</sup>)</td><td class="mono">O(b<sup>d</sup>)</td></tr>
+    <tr><td>Depth-first (DFS)</td><td>LIFO stack</td><td>No in infinite spaces or with loops</td><td>No</td><td class="mono">O(b<sup>m</sup>)</td><td class="mono">O(bm)</td></tr>
+    <tr><td>Uniform-cost (UCS)</td><td>Priority by path cost g(n)</td><td>Yes (positive costs)</td><td>Yes</td><td class="mono">O(b<sup>1+⌊C*/ε⌋</sup>)</td><td class="mono">same</td></tr>
+    <tr><td>Greedy best-first</td><td>Priority by h(n)</td><td>No (tree version)</td><td>No</td><td class="mono">O(b<sup>m</sup>)</td><td class="mono">O(b<sup>m</sup>)</td></tr>
+    <tr><td>A*</td><td>Priority by f(n) = g(n) + h(n)</td><td>Yes</td><td>Yes, if h is admissible (tree) / consistent (graph)</td><td colspan="2">Exponential in the worst case; far fewer nodes with a good h</td></tr>
+  </table></div>
+  <p class="mono" style="font-size:.85rem;color:var(--muted)">b = branching factor, d = depth of the shallowest goal, m = maximum depth, C* = optimal cost, ε = smallest step cost.</p>
+  <h3>A* and heuristics</h3>
+  <div class="formula">f(n) = g(n) + h(n)
+g(n) = cost already paid to reach n
+h(n) = estimated cost from n to the goal (the heuristic)</div>
+  <p>A heuristic is <b>admissible</b> if it never overestimates the true remaining cost, and <b>consistent</b> if for every step n → n' with cost c, h(n) ≤ c + h(n'). On a grid where Qadam moves in four directions, the <b>Manhattan distance</b> |x₁ − x₂| + |y₁ − y₂| is admissible and consistent, because every move changes x or y by exactly one. Straight-line (Euclidean) distance is admissible too, but less informed. A <b>dominating</b> heuristic (always ≥ another admissible one) expands no more nodes.</p>
+  <div class="demo" id="demo-search">
+    <h4>Live experiment 1 · BFS vs DFS vs A* on Qadam's floor</h4>
+    <p>Green = dock, red = shelf G, dark cells = racks. Click any cell to add or remove a rack, then run an algorithm. Light blue cells were expanded, gold is the path found.</p>
+    <div class="controls">
+      <button data-alg="bfs">Run BFS</button><button data-alg="dfs">Run DFS</button><button data-alg="astar">Run A* (Manhattan)</button><button data-alg="greedy" class="ghost">Run greedy best-first</button><button class="ghost" id="search-reset">Reset racks</button>
+    </div>
+    <div class="grid-demo" id="search-grid" style="grid-template-columns: repeat(14, 1fr);"></div>
+    <div class="readout" id="search-out" aria-live="polite">Choose an algorithm.</div>
+  </div>
+  <p>Result on the default floor: BFS and A* both find a shortest path of 21 moves, but A* expands 78 cells instead of 95, because the heuristic pulls the search toward the shelf. DFS expands only 50 cells but wanders into a 47-move path, and greedy best-first expands just 31 cells yet returns a 27-move path, because racks block the straight line. Only A* is both optimal and focused.</p>
+  <div class="box dyk"><span class="label">Did you know?</span>A* was published in 1968 by Peter Hart, Nils Nilsson and Bertram Raphael for Shakey, the first mobile robot that reasoned about its own actions. Variants of it still plan routes in games and robots today.</div>
+  <div class="quizhead">Mini-quiz</div>
+  <details class="quiz"><summary>1. Qadam's moves cost 1, but moving through the cold storage costs 5. Is BFS still optimal?</summary><p>No. BFS minimises the number of steps, not the cost. Use uniform-cost search or A*, which order the frontier by path cost.</p></details>
+  <details class="quiz"><summary>2. Is h(n) = 2 × Manhattan distance admissible?</summary><p>No. It can overestimate the remaining cost (for example 2 × 3 = 6 when only 3 moves remain), so A* may return a non-optimal path.</p></details>
+  <details class="quiz"><summary>3. Why does DFS use so little memory?</summary><p>It stores only the current path and the unexpanded siblings along it: O(bm) nodes, instead of the whole frontier level that BFS keeps.</p></details>
+</section>
+
+<section class="chapter" id="ch3">
+  <div class="chapter-head"><div class="week">3</div><div class="kicker">Week 3 · Local search and constraint satisfaction</div><h2>Good enough, and no conflicts</h2></div>
+  <div class="story"><span class="avatar" data-avatar="qadam"></span><p>The warehouse manager asks Qadam a different question: "Where should we place 20 charging stations so robots never wait long?" Here the <i>path</i> does not matter, only the final arrangement. And for the night shift: "Assign three robots to five zones so neighbouring zones never use the same robot."</p></div>
+  <h3>Local search</h3>
+  <p>Local search keeps one (or a few) current states and moves to neighbouring states, guided by an <b>objective function</b>. It uses very little memory and works in huge or continuous spaces, but it is not guaranteed to find the global optimum.</p>
+  <figure>
+    <svg viewBox="0 0 760 230" role="img" aria-label="A state-space landscape with a global maximum, a local maximum, a plateau and a shoulder; hill climbing can get stuck on the local maximum">
+      <g font-family="IBM Plex Sans, sans-serif" font-size="12" fill="currentColor">
+        <line x1="40" y1="200" x2="730" y2="200" stroke="currentColor"/><line x1="40" y1="200" x2="40" y2="20" stroke="currentColor"/>
+        <text x="385" y="222" text-anchor="middle">state space</text><text x="18" y="110" transform="rotate(-90 18 110)" text-anchor="middle">objective</text>
+        <path d="M40 170 C100 160 120 90 170 90 C220 90 230 150 270 150 C320 150 330 120 380 120 L460 120 C510 120 520 40 580 40 C640 40 660 150 730 160" fill="none" stroke="#0088a3" stroke-width="2.5"/>
+        <circle cx="170" cy="90" r="6" fill="#c98a00"/><text x="170" y="76" text-anchor="middle">local maximum</text>
+        <text x="420" y="110" text-anchor="middle">plateau</text>
+        <circle cx="580" cy="40" r="6" fill="#1f8a4c"/><text x="580" y="28" text-anchor="middle">global maximum</text>
+        <circle cx="120" cy="140" r="5" fill="none" stroke="currentColor" stroke-width="2"/><text x="96" y="132" text-anchor="end">start</text>
+      </g>
+    </svg>
+    <figcaption>Hill climbing from the marked start climbs to the local maximum and stops there, because every neighbour is lower, although a far higher peak exists.</figcaption>
+  </figure>
+  <ul>
+    <li><b>Hill climbing</b> always moves to the best neighbour and stops when none is better. Problems: local maxima, ridges and plateaus.</li>
+    <li><b>Random-restart hill climbing</b> runs hill climbing from many random starts and keeps the best result. With enough restarts it finds the global maximum with probability approaching 1.</li>
+    <li><b>Simulated annealing</b> picks a random neighbour; it always accepts an improvement and accepts a worse move with probability <span class="mono">e<sup>ΔE/T</sup></span> (ΔE &lt; 0). The temperature T decreases over time, so the search explores early and settles later. If T is lowered slowly enough, it finds the global optimum with probability approaching 1.</li>
+  </ul>
+  <div class="box"><span class="label">Worked example: simulated annealing</span>A move makes the objective worse by ΔE = −2. At T = 10 it is accepted with probability e<sup>−2/10</sup> ≈ <b>0.82</b>; at T = 1 only e<sup>−2</sup> ≈ <b>0.14</b>. Early on, Qadam happily wanders; at the end it behaves almost like hill climbing.</div>
+  <h3>Constraint satisfaction problems (CSP)</h3>
+  <p>A CSP has <b>variables</b>, a <b>domain</b> of values for each, and <b>constraints</b> on combinations. A solution assigns every variable a value with no constraint violated. CSPs let general algorithms exploit structure instead of searching blindly.</p>
+  <figure>
+    <svg viewBox="0 0 760 220" role="img" aria-label="A constraint graph of five warehouse zones; edges connect neighbouring zones that must get different robots; one valid colouring is shown">
+      <g font-family="IBM Plex Sans, sans-serif" font-size="14" text-anchor="middle">
+        <g stroke="currentColor" stroke-width="1.5">
+          <line x1="120" y1="60" x2="300" y2="60"/><line x1="120" y1="60" x2="210" y2="170"/><line x1="300" y1="60" x2="210" y2="170"/>
+          <line x1="300" y1="60" x2="460" y2="110"/><line x1="210" y1="170" x2="460" y2="110"/><line x1="460" y1="110" x2="620" y2="110"/>
+        </g>
+        <circle cx="120" cy="60" r="30" fill="#0088a3"/><text x="120" y="65" fill="#fff">Z1</text>
+        <circle cx="300" cy="60" r="30" fill="#c98a00"/><text x="300" y="65" fill="#fff">Z2</text>
+        <circle cx="210" cy="170" r="30" fill="#1f8a4c"/><text x="210" y="175" fill="#fff">Z3</text>
+        <circle cx="460" cy="110" r="30" fill="#0088a3"/><text x="460" y="115" fill="#fff">Z4</text>
+        <circle cx="620" cy="110" r="30" fill="#c98a00"/><text x="620" y="115" fill="#fff">Z5</text>
+        <g font-size="12" fill="currentColor" text-anchor="start"><text x="560" y="180">blue = robot R1</text><text x="560" y="198">gold = robot R2</text><text x="560" y="216">green = robot R3</text></g>
+      </g>
+    </svg>
+    <figcaption>Variables Z1–Z5, domain {R1, R2, R3}, constraint: zones joined by an edge get different robots. Z1, Z2, Z3 form a triangle, so they need all three robots.</figcaption>
+  </figure>
+  <ul>
+    <li><b>Backtracking search</b>: assign one variable at a time, check constraints, and undo the last choice when a variable has no legal value left.</li>
+    <li><b>MRV (minimum remaining values)</b>: choose the variable with the fewest legal values first ("fail first"). <b>Degree heuristic</b>: break ties by the variable involved in the most constraints. <b>Least constraining value</b>: try the value that rules out the fewest options for neighbours.</li>
+    <li><b>Forward checking</b>: after each assignment, remove inconsistent values from neighbours' domains. <b>Arc consistency (AC-3)</b> goes further: every value of X must have a compatible value in each neighbour Y.</li>
+  </ul>
+  <div class="box"><span class="label">Trace on the graph above</span>Assign Z4 first (degree 3, ties with Z2 and Z3). Z4 = R1 → forward checking removes R1 from Z2, Z3, Z5. Z2 = R2 → Z1 ∈ {R1, R3}, Z3 ∈ {R3}. MRV picks Z3 = R3, then Z1 = R1 and Z5 = R2. Solved without a single backtrack.</div>
+  <div class="mythfact"><div class="myth"><b>Myth</b>A smarter algorithm always finds the best answer.</div><div class="fact"><b>Fact</b>Local search trades optimality guarantees for speed and memory. That trade is often the right engineering choice.</div></div>
+  <div class="quizhead">Mini-quiz</div>
+  <details class="quiz"><summary>1. Why might hill climbing fail on a plateau?</summary><p>All neighbours have the same value, so there is no uphill direction; the algorithm stops or wanders randomly. Sideways moves (with a limit) or restarts help.</p></details>
+  <details class="quiz"><summary>2. What happens to simulated annealing when T is very close to 0?</summary><p>e<sup>ΔE/T</sup> approaches 0 for any worse move, so it accepts only improvements and behaves like hill climbing.</p></details>
+</section>
+
+<section class="chapter" id="ch4">
+  <div class="chapter-head"><div class="week">4</div><div class="kicker">Week 4 · Adversarial search and game trees</div><h2>Playing against a rival</h2></div>
+  <div class="story"><span class="avatar" data-avatar="bilim"></span><p>A rival robot from another company shares the aisles and grabs the best loading slots. <b>Professor Bilim:</b> "When another agent works against you, plan for its best reply, not for luck."</p></div>
+  <p>Two-player, turn-taking, <b>zero-sum</b> games with perfect information (chess, togyz kumalak, tic-tac-toe) are modelled with a <b>game tree</b>: MAX moves to maximise the final utility, MIN moves to minimise it.</p>
+  <div class="formula">MINIMAX(s) = UTILITY(s)                         if s is terminal
+           = max over actions of MINIMAX(result) if MAX to move
+           = min over actions of MINIMAX(result) if MIN to move</div>
+  <h3>Alpha-beta pruning</h3>
+  <p>Alpha-beta returns the same move as minimax but skips branches that cannot affect the decision. <b>α</b> is the best value MAX can already guarantee on the path, <b>β</b> the best value MIN can guarantee. When a node's value falls outside [α, β], its remaining children are pruned. With perfect move ordering it examines about O(b<sup>m/2</sup>) nodes instead of O(b<sup>m</sup>), so it can search roughly twice as deep in the same time.</p>
+  <figure>
+    <svg viewBox="0 0 760 290" role="img" aria-label="Minimax tree with alpha-beta pruning: MAX root value 3; MIN nodes 3, at most 2, and 2; leaves 4 and 6 are pruned">
+      <g font-family="IBM Plex Sans, sans-serif" font-size="14" text-anchor="middle" fill="currentColor">
+        <g stroke="currentColor" stroke-width="1.4">
+          <line x1="380" y1="62" x2="150" y2="128"/><line x1="380" y1="62" x2="380" y2="128"/><line x1="380" y1="62" x2="610" y2="128"/>
+          <line x1="150" y1="158" x2="80" y2="222"/><line x1="150" y1="158" x2="150" y2="222"/><line x1="150" y1="158" x2="220" y2="222"/>
+          <line x1="380" y1="158" x2="310" y2="222"/>
+          <line x1="610" y1="158" x2="540" y2="222"/><line x1="610" y1="158" x2="610" y2="222"/><line x1="610" y1="158" x2="680" y2="222"/>
+        </g>
+        <g stroke="currentColor" stroke-width="1.4" stroke-dasharray="5 4" opacity=".45"><line x1="380" y1="158" x2="380" y2="222"/><line x1="380" y1="158" x2="450" y2="222"/></g>
+        <polygon points="380,18 410,62 350,62" fill="#0088a3"/><text x="380" y="53" fill="#fff">3</text>
+        <text x="460" y="40" text-anchor="start" font-size="12">MAX picks the left move: value 3</text>
+        <polygon points="120,128 180,128 150,172" fill="#c98a00"/><text x="150" y="146" fill="#fff">3</text>
+        <polygon points="350,128 410,128 380,172" fill="#c98a00"/><text x="380" y="146" fill="#fff">≤2</text>
+        <polygon points="580,128 640,128 610,172" fill="#c98a00"/><text x="610" y="146" fill="#fff">2</text>
+        <g><rect x="62" y="222" width="36" height="30" rx="5" fill="none" stroke="currentColor"/><text x="80" y="242">3</text>
+        <rect x="132" y="222" width="36" height="30" rx="5" fill="none" stroke="currentColor"/><text x="150" y="242">12</text>
+        <rect x="202" y="222" width="36" height="30" rx="5" fill="none" stroke="currentColor"/><text x="220" y="242">8</text>
+        <rect x="292" y="222" width="36" height="30" rx="5" fill="none" stroke="currentColor"/><text x="310" y="242">2</text>
+        <rect x="362" y="222" width="36" height="30" rx="5" fill="none" stroke="currentColor" stroke-dasharray="4 3" opacity=".45"/><text x="380" y="242" opacity=".45">4</text>
+        <rect x="432" y="222" width="36" height="30" rx="5" fill="none" stroke="currentColor" stroke-dasharray="4 3" opacity=".45"/><text x="450" y="242" opacity=".45">6</text>
+        <rect x="522" y="222" width="36" height="30" rx="5" fill="none" stroke="currentColor"/><text x="540" y="242">14</text>
+        <rect x="592" y="222" width="36" height="30" rx="5" fill="none" stroke="currentColor"/><text x="610" y="242">5</text>
+        <rect x="662" y="222" width="36" height="30" rx="5" fill="none" stroke="currentColor"/><text x="680" y="242">2</text></g>
+        <text x="415" y="276" font-size="12">pruned: after seeing 2, MIN will give at most 2 &lt; α = 3</text>
+      </g>
+    </svg>
+    <figcaption>The classic example from Russell and Norvig. MIN nodes take the smallest child (gold), MAX takes the largest (blue). Leaves 4 and 6 are never evaluated, yet the decision is the same as full minimax.</figcaption>
+  </figure>
+  <h3>Chance and imperfect real-time decisions</h3>
+  <ul>
+    <li><b>Expectimax</b> adds <b>chance nodes</b> whose value is the probability-weighted average of their children, for games with dice or an opponent who plays randomly. Example: a chance node with outcomes 10 (p = 0.5) and 0 (p = 0.5) is worth 5, while minimax would treat it as 0.</li>
+    <li>Real games are too deep to search to the end, so programs stop at a <b>depth limit</b> and apply an <b>evaluation function</b> (for chess: material, mobility, king safety).</li>
+  </ul>
+  <div class="box dyk"><span class="label">Did you know?</span>In 1997 IBM's Deep Blue beat world champion Garry Kasparov using massively parallel alpha-beta search. In 2016 DeepMind's AlphaGo beat Lee Sedol at Go by combining Monte Carlo tree search with neural networks, because Go's branching factor (about 250) is far too large for plain alpha-beta.</div>
+  <div class="quizhead">Mini-quiz</div>
+  <details class="quiz"><summary>1. Does alpha-beta pruning ever change the move chosen by minimax?</summary><p>No. It prunes only branches that cannot influence the final decision, so the result is identical; only the amount of work changes.</p></details>
+  <details class="quiz"><summary>2. Why does move ordering matter for alpha-beta?</summary><p>If the best moves are examined first, α and β tighten early and more branches are cut, approaching O(b<sup>m/2</sup>). With the worst ordering nothing is pruned.</p></details>
+</section>
+
+<section class="chapter" id="ch5">
+  <div class="chapter-head"><div class="week">5</div><div class="kicker">Week 5 · Markov decision processes and reinforcement learning</div><h2>Learning from rewards</h2></div>
+  <div class="story"><span class="avatar" data-avatar="qadam"></span><p>Qadam's wheels slip on the polished floor: when it tries to go up, it goes up only 80% of the time and slides sideways otherwise. A single plan is no longer enough. Qadam needs a <i>policy</i>: what to do in every square, whatever happens.</p></div>
+  <h3>Markov decision processes</h3>
+  <p>An <b>MDP</b> describes sequential decisions in a fully observable but stochastic world. It has a set of states S, actions A(s), a <b>transition model</b> P(s′ | s, a), a <b>reward</b> R(s) (or R(s, a, s′)), and a <b>discount factor</b> γ between 0 and 1 that makes near rewards worth more than distant ones. The <b>Markov property</b> says that the next state depends only on the current state and action, not on the earlier history.</p>
+  <p>A <b>policy</b> π(s) tells the agent which action to take in each state. The <b>utility</b> U(s) of a state is the expected discounted sum of rewards from that state onward when acting optimally. The optimal utilities satisfy the <b>Bellman equation</b>:</p>
+  <div class="formula">U(s) = R(s) + γ · max over a of  Σ P(s′ | s, a) · U(s′)
+                                  s′</div>
+  <p><b>Value iteration</b> starts with U = 0 everywhere and repeatedly applies this equation as an update to every state until the values stop changing. The optimal policy then picks, in each state, the action with the highest expected utility.</p>
+  <div class="demo" id="demo-vi">
+    <h4>Live experiment 2 · Value iteration in the 4 × 3 warehouse</h4>
+    <p>The classic Russell and Norvig grid: +1 at the charging dock (top right), −1 at the spill (right middle), a pillar at the centre-left, step reward −0.04, γ = 1. Each move succeeds with probability 0.8 and slips left or right with 0.1 each.</p>
+    <div class="controls"><button id="vi-step">One iteration</button><button id="vi-run">Run to convergence</button><button class="ghost" id="vi-reset">Reset</button><span class="mono" id="vi-iter">iteration 0</span></div>
+    <div class="vi-grid" id="vi-grid" aria-live="polite"></div>
+  </div>
+  <p>At convergence the start square (bottom left) is worth <b>0.705</b> and the square next to the dock is worth <b>0.918</b>. Notice the policy in the bottom-right square: it points <i>away</i> from the −1 spill and takes the long way round, because a slip next to the spill is too risky.</p>
+  <h3>Reinforcement learning</h3>
+  <p>Value iteration needs the transition model. In <b>reinforcement learning</b> the agent does not know P or R; it learns from trial and error. <b>Q-learning</b> learns the value Q(s, a) of taking action a in state s, directly from experience tuples (s, a, r, s′):</p>
+  <div class="formula">Q(s,a) ← Q(s,a) + α · [ r + γ · max Q(s′,a′) − Q(s,a) ]
+                               a′
+α = learning rate,  the bracket = temporal-difference (TD) error</div>
+  <div class="box"><span class="label">Worked example: one Q-learning update</span>Q(s, right) = 0.50, α = 0.1, γ = 0.9. Qadam moves right, receives r = −0.04 and lands in s′ where the best Q value is 0.80.<br>TD target = −0.04 + 0.9 × 0.80 = 0.68. TD error = 0.68 − 0.50 = 0.18.<br>New Q(s, right) = 0.50 + 0.1 × 0.18 = <b>0.518</b>.</div>
+  <p>Q-learning is <b>off-policy</b>: it learns the optimal policy even while exploring. The <b>exploration vs exploitation</b> dilemma is usually handled with <b>ε-greedy</b>: with probability ε take a random action, otherwise the best known one.</p>
+  <div class="mythfact"><div class="myth"><b>Myth</b>Reinforcement learning means the robot is rewarded like a pet with treats.</div><div class="fact"><b>Fact</b>The reward is just a number from the environment. Designing it carefully is hard: a badly chosen reward can be "hacked" by behaviour nobody intended.</div></div>
+  <div class="quizhead">Mini-quiz</div>
+  <details class="quiz"><summary>1. What happens to an agent's behaviour if γ = 0?</summary><p>It cares only about the immediate reward and ignores all future consequences: completely short-sighted.</p></details>
+  <details class="quiz"><summary>2. Why does the agent need exploration in Q-learning?</summary><p>If it always exploits its current estimates, it may never try the action that is actually best, so its Q-values for that action never improve.</p></details>
+</section>
+
+<section class="chapter" id="ch6">
+  <div class="chapter-head"><div class="week">6</div><div class="kicker">Week 6 · Probability and Bayesian networks</div><h2>The sensor that sometimes lies</h2></div>
+  <div class="story"><span class="avatar" data-avatar="aru"></span><p><b>Aru:</b> "The sensor says BLOCKED. So the path is blocked, right?" <b>Professor Bilim:</b> "The sensor is right 80% of the time when there is an obstacle. That is not the same as being right 80% of the time when it says BLOCKED."</p></div>
+  <h3>Probability basics</h3>
+  <ul>
+    <li><b>Conditional probability</b>: P(A | B) = P(A ∧ B) / P(B), the probability of A once we know B.</li>
+    <li><b>Product rule</b>: P(A ∧ B) = P(A | B) · P(B).</li>
+    <li><b>Law of total probability</b>: P(B) = P(B | A) · P(A) + P(B | ¬A) · P(¬A).</li>
+    <li><b>Bayes' rule</b>: P(A | B) = P(B | A) · P(A) / P(B). It turns the sensor's known accuracy P(reading | state) into what we want, P(state | reading).</li>
+  </ul>
+  <h3>Worked example: 100 warehouse situations</h3>
+  <p>Prior P(Obstacle) = 0.30. Sensor: P(BLOCKED | Obstacle) = 0.80, P(BLOCKED | Clear) = 0.20.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Actual path</th><th class="n">Sensor: BLOCKED</th><th class="n">Sensor: CLEAR</th><th class="n">Total</th></tr>
+    <tr><td>Obstacle</td><td class="n">24 = 30 × 0.80</td><td class="n">6 = 30 × 0.20</td><td class="n">30</td></tr>
+    <tr><td>Clear</td><td class="n">14 = 70 × 0.20</td><td class="n">56 = 70 × 0.80</td><td class="n">70</td></tr>
+    <tr><td><b>Total</b></td><td class="n"><b>38</b></td><td class="n"><b>62</b></td><td class="n">100</td></tr>
+  </table></div>
+  <div class="formula">P(BLOCKED) = 0.80 × 0.30 + 0.20 × 0.70 = 0.38
+P(Obstacle | BLOCKED) = 0.24 / 0.38 = 0.6316   (63.2%, not 80%)
+P(Obstacle | CLEAR)   = 0.06 / 0.62 = 0.0968   (9.7%)</div>
+  <p>Of the 38 BLOCKED reports, 14 are false alarms from the many clear paths. Ignoring the prior like this is called <b>base-rate neglect</b>; doctors, juries and robots all fall for it.</p>
+  <div class="demo" id="demo-bayes">
+    <h4>Live experiment 3 · Bayes calculator</h4>
+    <div class="controls">
+      <label for="b-prior">Prior P(Obstacle) <input type="range" id="b-prior" min="0.01" max="0.99" step="0.01" value="0.30"> <span class="mono" id="b-prior-v">0.30</span></label>
+    </div>
+    <div class="controls">
+      <label for="b-hit">P(BLOCKED | Obstacle) <input type="range" id="b-hit" min="0.01" max="0.99" step="0.01" value="0.80"> <span class="mono" id="b-hit-v">0.80</span></label>
+      <label for="b-fa">P(BLOCKED | Clear) <input type="range" id="b-fa" min="0.01" max="0.99" step="0.01" value="0.20"> <span class="mono" id="b-fa-v">0.20</span></label>
+    </div>
+    <div class="barrow"><span>prior</span><div class="bar" id="b-bar0"></div><span id="b-out0">0.300</span></div>
+    <div class="barrow"><span>after BLOCKED</span><div class="bar" id="b-bar1" style="background:var(--sun)"></div><span id="b-out1">0.632</span></div>
+    <div class="barrow"><span>after CLEAR</span><div class="bar" id="b-bar2" style="background:var(--good)"></div><span id="b-out2">0.097</span></div>
+    <p>Try raising the false-alarm rate to 0.40: P(Obstacle | BLOCKED) drops to 0.46, so the BLOCKED reading becomes far less informative.</p>
+  </div>
+  <h3>Bayesian networks</h3>
+  <p>A <b>Bayesian network</b> is a directed acyclic graph: each node is a random variable, each arrow a direct probabilistic influence, and each node stores a <b>conditional probability table (CPT)</b> given its parents. The full joint distribution is the product of the local tables, which is far smaller than listing every combination.</p>
+  <figure>
+    <svg viewBox="0 0 760 150" role="img" aria-label="Bayesian network: Weather influences Robot Environment, which influences Sensor Reading">
+      <defs><marker id="ar6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+      <g font-family="IBM Plex Sans, sans-serif" text-anchor="middle" fill="currentColor">
+        <rect x="20" y="30" width="200" height="70" rx="12" fill="none" stroke="currentColor"/><text x="120" y="60" font-size="15" font-weight="600">Weather</text><text x="120" y="82" font-size="12">Dry / Rainy</text>
+        <rect x="280" y="30" width="200" height="70" rx="12" fill="none" stroke="#0088a3" stroke-width="2"/><text x="380" y="60" font-size="15" font-weight="600">Robot Environment</text><text x="380" y="82" font-size="12">Obstacle / Clear</text>
+        <rect x="540" y="30" width="200" height="70" rx="12" fill="none" stroke="currentColor"/><text x="640" y="60" font-size="15" font-weight="600">Sensor Reading</text><text x="640" y="82" font-size="12">BLOCKED / CLEAR</text>
+        <text x="250" y="22" font-size="12">wet floor, fallen boxes</text><text x="510" y="22" font-size="12">noisy detection</text>
+        <text x="380" y="135" font-size="12" opacity=".75">P(W, E, S) = P(W) · P(E | W) · P(S | E)</text>
+      </g>
+      <g stroke="currentColor" stroke-width="1.5" marker-end="url(#ar6)"><line x1="220" y1="65" x2="276" y2="65"/><line x1="480" y1="65" x2="536" y2="65"/></g>
+    </svg>
+    <figcaption>There is no arrow from Weather to Sensor: the sensor reacts only to the real path. So Sensor Reading is conditionally independent of Weather given the Environment.</figcaption>
+  </figure>
+  <p>With P(Rainy) = 0.40, P(Obstacle | Dry) = 0.20 and P(Obstacle | Rainy) = 0.45, the network gives P(Obstacle) = 0.60 × 0.20 + 0.40 × 0.45 = <b>0.30</b>, exactly the prior used above. Inference can run in both directions: from cause to effect (rain makes BLOCKED more likely) and from effect to cause (a BLOCKED reading makes rain slightly more likely).</p>
+  <div class="quizhead">Mini-quiz</div>
+  <details class="quiz"><summary>1. A test is 99% accurate for a disease that 1 in 1000 people have. You test positive. Is it 99% likely you are ill?</summary><p>No. Per 100 000 people: 100 are ill and 99 test positive; 99 900 are healthy and 999 test positive. P(ill | positive) = 99 / 1098 ≈ 9%. The low base rate dominates.</p></details>
+  <details class="quiz"><summary>2. How many numbers does the full joint table of three binary variables need, and how many does the network above need?</summary><p>The joint table needs 2³ − 1 = 7 independent numbers. The network needs 1 (Weather) + 2 (Environment given Weather) + 2 (Sensor given Environment) = 5. The saving grows rapidly with more variables.</p></details>
+</section>
+
+<section class="chapter" id="ch7">
+  <div class="chapter-head"><div class="week">7</div><div class="kicker">Week 7 · Hidden Markov models and sequential inference</div><h2>Where am I now?</h2></div>
+  <div class="story"><span class="avatar" data-avatar="bilim"></span><p>Qadam's position tracker breaks. It still moves between zones A, B and C, and a floor sensor reports a colour, RED or BLUE, that depends on the zone but is noisy. <b>Professor Bilim:</b> "One reading tells you little. A sequence of readings plus what you know about motion tells you a lot."</p></div>
+  <p>A <b>hidden Markov model</b> has a hidden state X<sub>t</sub> (the true zone) that evolves by a <b>transition model</b> P(X<sub>t</sub> | X<sub>t−1</sub>), and an observation E<sub>t</sub> generated by an <b>emission (sensor) model</b> P(E<sub>t</sub> | X<sub>t</sub>). The <b>belief</b> b<sub>t</sub> is the probability distribution over states given all evidence so far.</p>
+  <div class="twocol">
+    <div class="tablewrap"><table>
+      <tr><th>From \ To</th><th class="n">A</th><th class="n">B</th><th class="n">C</th></tr>
+      <tr><td>A</td><td class="n">0.70</td><td class="n">0.30</td><td class="n">0.00</td></tr>
+      <tr><td>B</td><td class="n">0.20</td><td class="n">0.60</td><td class="n">0.20</td></tr>
+      <tr><td>C</td><td class="n">0.00</td><td class="n">0.30</td><td class="n">0.70</td></tr>
+    </table></div>
+    <div class="tablewrap"><table>
+      <tr><th>Zone</th><th class="n">P(RED | zone)</th><th class="n">P(BLUE | zone)</th></tr>
+      <tr><td>A</td><td class="n">0.80</td><td class="n">0.20</td></tr>
+      <tr><td>B</td><td class="n">0.50</td><td class="n">0.50</td></tr>
+      <tr><td>C</td><td class="n">0.20</td><td class="n">0.80</td></tr>
+    </table></div>
+  </div>
+  <h3>Filtering: predict, then update</h3>
+  <div class="formula">1. PREDICT   p_t(j) = Σ b_{t−1}(i) · T(i, j)          (the robot moved)
+2. WEIGHT    w_t(j) = p_t(j) · P(E_t | j)             (the sensor spoke)
+3. NORMALISE b_t(j) = w_t(j) / Σ w_t(k)               (probabilities sum to 1)</div>
+  <div class="box"><span class="label">Worked step 1: start b₀ = [0.50, 0.30, 0.20], observe RED</span>Predict: A = 0.50·0.70 + 0.30·0.20 = 0.41; B = 0.50·0.30 + 0.30·0.60 + 0.20·0.30 = 0.39; C = 0.30·0.20 + 0.20·0.70 = 0.20.<br>Weight: 0.41·0.8 = 0.328, 0.39·0.5 = 0.195, 0.20·0.2 = 0.040; sum Z = 0.563.<br>Belief: <b>[0.5826, 0.3464, 0.0710]</b>, most likely A.</div>
+  <div class="demo" id="demo-hmm">
+    <h4>Live experiment 4 · Track Qadam through the fog</h4>
+    <p>Press a colour to feed Qadam a sensor reading. The default story RED → BLUE → BLUE → RED ends with belief [0.3104, 0.5058, 0.1838]: zone B.</p>
+    <div class="controls"><button id="hmm-red" style="background:#c0392b">Sensor says RED</button><button id="hmm-blue" style="background:#2c6fbb">Sensor says BLUE</button><button class="ghost" id="hmm-story">Play RED, BLUE, BLUE, RED</button><button class="ghost" id="hmm-reset">Reset</button></div>
+    <div class="barrow"><span>Zone A</span><div class="bar" id="hmm-a"></div><span id="hmm-va">0.500</span></div>
+    <div class="barrow"><span>Zone B</span><div class="bar" id="hmm-b"></div><span id="hmm-vb">0.300</span></div>
+    <div class="barrow"><span>Zone C</span><div class="bar" id="hmm-c"></div><span id="hmm-vc">0.200</span></div>
+    <div class="readout" id="hmm-log" aria-live="polite">t = 0, belief b₀ = [0.500, 0.300, 0.200]</div>
+  </div>
+  <p>Other HMM tasks use the same model: <b>prediction</b> (where will Qadam be in 3 steps?), <b>smoothing</b> (where was it at step 2, using later evidence too?) and the <b>most likely explanation</b> (the single most probable path of zones, found by the <b>Viterbi algorithm</b>). HMMs powered speech recognition for decades and are still used in robotics, bioinformatics and finance.</p>
+  <div class="mythfact"><div class="myth"><b>Myth</b>To filter, start from the original prior at every step.</div><div class="fact"><b>Fact</b>Each step starts from the previous <i>posterior</i>. Restarting from b₀ throws away all earlier evidence.</div></div>
+  <div class="quizhead">Mini-quiz</div>
+  <details class="quiz"><summary>1. Can Qadam move from zone C to zone A in one step?</summary><p>No. T(C, A) = 0, so after one step any probability for A must come from robots that were in A or B.</p></details>
+  <details class="quiz"><summary>2. After two BLUE readings, why does B lead even though BLUE is most common in C?</summary><p>The belief in C was only 0.07 after the first RED, and C can be reached only via B or by staying. B collects probability from all three zones and emits BLUE half the time, so it wins until the evidence for C accumulates.</p></details>
+</section>
+
+<section class="chapter" id="ch8">
+  <div class="chapter-head"><div class="week">8</div><div class="kicker">Week 8 · Rational decisions and classical machine learning</div><h2>Deciding, then learning from data</h2></div>
+  <div class="story"><span class="avatar" data-avatar="aru"></span><p><b>Aru:</b> "Writing every rule by hand is exhausting." <b>Professor Bilim:</b> "Then let Qadam learn the rules from examples. But first, let us decide what 'good' means."</p></div>
+  <h3>Rational decisions: maximise expected utility</h3>
+  <p>A rational agent chooses the action with the highest <b>expected utility</b>: EU(a) = Σ P(outcome | a) · U(outcome). Utilities let the agent trade off probability against how good or bad each outcome is.</p>
+  <div class="box"><span class="label">Worked example: which aisle?</span>Aisle 1 is short: 90% chance of an on-time delivery (utility 100), 10% chance of a blockage (utility −50). EU = 0.9·100 + 0.1·(−50) = <b>85</b>.<br>Aisle 2 is long but always free: on time with utility 80. EU = <b>80</b>.<br>Qadam takes Aisle 1. If a blockage cost −300 instead, EU(Aisle 1) = 90 − 30 = 60 &lt; 80, and the safe aisle wins.</div>
+  <h3>Machine learning in one picture</h3>
+  <ul>
+    <li><b>Supervised learning</b>: learn a function from labelled examples (input → correct output). Classification predicts a category, regression a number.</li>
+    <li><b>Unsupervised learning</b>: find structure in unlabelled data, for example clustering similar parcels.</li>
+    <li><b>Reinforcement learning</b>: learn from rewards (Chapter 5).</li>
+  </ul>
+  <p>Data is split into a <b>training set</b> to fit the model and a <b>test set</b> kept aside to estimate performance on new data. A model that memorises the training data but fails on new data is <b>overfitting</b>; one too simple to capture the pattern is <b>underfitting</b>. <b>Cross-validation</b> rotates the test fold to get a more reliable estimate.</p>
+  <h3>Three classical models</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Model</th><th>Idea</th><th>Typical use</th></tr>
+    <tr><td><b>Naive Bayes</b></td><td>Bayes' rule with the "naive" assumption that features are independent given the class: P(class | x) ∝ P(class) · Π P(xᵢ | class)</td><td>Spam filters, text sentiment</td></tr>
+    <tr><td><b>Linear regression</b></td><td>Fit ŷ = w·x + b by minimising the mean squared error</td><td>Predicting delivery time from distance</td></tr>
+    <tr><td><b>Logistic regression</b></td><td>A linear score passed through the sigmoid σ(z) = 1 / (1 + e<sup>−z</sup>) gives a probability; trained by minimising log-loss</td><td>Will this parcel arrive late? (yes/no)</td></tr>
+  </table></div>
+  <h3>Evaluating a classifier</h3>
+  <p>Qadam's camera classifies 100 boxes as <b>damaged</b> (positive) or fine. The confusion matrix:</p>
+  <div class="tablewrap"><table>
+    <tr><th></th><th class="n">Predicted damaged</th><th class="n">Predicted fine</th></tr>
+    <tr><td>Actually damaged (10)</td><td class="n">TP = 8</td><td class="n">FN = 2</td></tr>
+    <tr><td>Actually fine (90)</td><td class="n">FP = 5</td><td class="n">TN = 85</td></tr>
+  </table></div>
+  <div class="formula">Accuracy  = (TP + TN) / all      = 93 / 100   = 0.93
+Precision = TP / (TP + FP)        = 8 / 13     = 0.615
+Recall    = TP / (TP + FN)        = 8 / 10     = 0.80
+F1        = 2·P·R / (P + R)                    = 0.696</div>
+  <p>Accuracy looks great, yet a lazy model that calls every box "fine" would still score 0.90. With imbalanced classes, precision, recall and F1 tell the real story. Which error is worse depends on the cost: a missed damaged box (FN) reaches a customer, a false alarm (FP) only costs a quick manual check.</p>
+  <div class="box dyk"><span class="label">From our own lab</span>In Lab 6 a Naive Bayes sentiment classifier trained on only 30 short messages reached just 0.30 test accuracy, worse than guessing. Positive and negative feedback used the same topic words. Small, overlapping data is the most common reason a correct algorithm still performs badly.</div>
+  <div class="quizhead">Mini-quiz</div>
+  <details class="quiz"><summary>1. Why must the test set never be used for training or tuning?</summary><p>Then the test score would measure memory, not generalisation, and would be optimistically biased.</p></details>
+  <details class="quiz"><summary>2. A model has precision 1.0 and recall 0.1. What does it do?</summary><p>It flags very few items, and every flagged item is truly positive, but it misses 90% of the positives.</p></details>
+</section>
+
+<section class="chapter" id="ch9">
+  <div class="chapter-head"><div class="week">9</div><div class="kicker">Week 9 · Perceptrons and neural networks</div><h2>A brain made of numbers</h2></div>
+  <div class="story"><span class="avatar" data-avatar="qadam"></span><p>Qadam's camera now has to read handwritten labels on boxes. Rules for every possible "7" are impossible to write. Qadam needs to learn features by itself.</p></div>
+  <h3>The perceptron</h3>
+  <p>Frank Rosenblatt's <b>perceptron</b> (1958) computes a weighted sum of its inputs plus a bias and outputs 1 if the sum is positive, else 0. It learns with a simple rule: after each mistake, move the weights toward the correct answer.</p>
+  <div class="formula">output = step(w₀ + w₁x₁ + w₂x₂)
+learning rule:  wᵢ ← wᵢ + η · (target − output) · xᵢ      (x₀ = 1 for the bias)</div>
+  <p>The <b>perceptron convergence theorem</b> guarantees that this rule finds a separating line whenever one exists, that is, when the data is <b>linearly separable</b>. AND and OR are separable; <b>XOR is not</b>: no single straight line puts (0,1) and (1,0) on one side and (0,0), (1,1) on the other. Minsky and Papert highlighted this limit in 1969.</p>
+  <div class="demo" id="demo-perc">
+    <h4>Live experiment 5 · Train a perceptron</h4>
+    <div class="controls">
+      <label for="p-gate">Logic gate</label><select id="p-gate"><option value="and">AND</option><option value="or">OR</option><option value="xor">XOR</option></select>
+      <button id="p-epoch">Train one epoch</button><button id="p-run">Train 20 epochs</button><button class="ghost" id="p-reset">Reset weights</button>
+    </div>
+    <canvas id="p-canvas" width="300" height="300" aria-label="The four input points and the perceptron's current decision line"></canvas>
+    <div class="readout" id="p-out" aria-live="polite">weights w₀ = 0, w₁ = 0, w₂ = 0 · epoch 0</div>
+    <p>With η = 1 and weights starting at 0, AND converges after 6 epochs (to w = [−2, 2, 1]) and OR after 4. XOR keeps making errors forever.</p>
+  </div>
+  <h3>Multilayer networks and backpropagation</h3>
+  <p>Stacking neurons in <b>hidden layers</b> with non-linear <b>activation functions</b> (sigmoid, tanh, ReLU(z) = max(0, z)) lets a network represent non-linear functions: two hidden neurons are enough for XOR. Networks are trained by <b>gradient descent</b>: compute a loss, use <b>backpropagation</b> (the chain rule applied layer by layer) to get the gradient of the loss for every weight, and step each weight a little against its gradient. Without non-linear activations, any stack of layers collapses into one linear function.</p>
+  <figure>
+    <svg viewBox="0 0 760 230" role="img" aria-label="A neural network with two inputs, three hidden neurons and one output; signals flow forward, errors flow backward">
+      <defs><marker id="ar9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+      <g stroke="currentColor" stroke-width="1" opacity=".55">
+        <line x1="150" y1="80" x2="370" y2="50"/><line x1="150" y1="80" x2="370" y2="115"/><line x1="150" y1="80" x2="370" y2="180"/>
+        <line x1="150" y1="150" x2="370" y2="50"/><line x1="150" y1="150" x2="370" y2="115"/><line x1="150" y1="150" x2="370" y2="180"/>
+        <line x1="370" y1="50" x2="590" y2="115"/><line x1="370" y1="115" x2="590" y2="115"/><line x1="370" y1="180" x2="590" y2="115"/>
+      </g>
+      <g font-family="IBM Plex Sans, sans-serif" font-size="13" text-anchor="middle" fill="currentColor">
+        <circle cx="150" cy="80" r="20" fill="#e6ebf1" stroke="currentColor"/><text x="150" y="85" fill="#17212e">x₁</text>
+        <circle cx="150" cy="150" r="20" fill="#e6ebf1" stroke="currentColor"/><text x="150" y="155" fill="#17212e">x₂</text>
+        <circle cx="370" cy="50" r="20" fill="#0088a3"/><circle cx="370" cy="115" r="20" fill="#0088a3"/><circle cx="370" cy="180" r="20" fill="#0088a3"/>
+        <circle cx="590" cy="115" r="22" fill="#c98a00"/><text x="590" y="120" fill="#fff">ŷ</text>
+        <text x="150" y="30">input layer</text><text x="370" y="18">hidden layer (ReLU)</text><text x="590" y="70">output</text>
+        <text x="380" y="222" font-size="12">forward pass: compute ŷ · backward pass: send the error back to adjust every weight</text>
+      </g>
+      <g stroke="#c98a00" stroke-width="2" marker-end="url(#ar9)"><line x1="560" y1="205" x2="200" y2="205"/></g>
+    </svg>
+    <figcaption>A small multilayer perceptron. The hidden layer is what lets the network solve XOR, which a single perceptron cannot.</figcaption>
+  </figure>
+  <h3>Seeing with networks</h3>
+  <p><b>Convolutional neural networks (CNNs)</b> slide small learned filters over an image, so the same edge detector works anywhere in the picture, and pooling layers build up from edges to shapes to objects. In our Lab 7 a hand-designed HOG feature + logistic regression read 8×8 digits with 0.993 accuracy, while ImageNet CNNs such as ResNet50 recognised an espresso cup with 99% confidence but called a rocket a "drilling platform" with 97% confidence. <b>Transfer learning</b> reuses a network trained on one task (ImageNet photos) as a frozen feature extractor for a new task.</p>
+  <div class="mythfact"><div class="myth"><b>Myth</b>Artificial neurons work like biological neurons.</div><div class="fact"><b>Fact</b>They were loosely inspired by them, but a real neuron is a complex electrochemical cell. An artificial neuron is a weighted sum followed by a simple function.</div></div>
+  <div class="quizhead">Mini-quiz</div>
+  <details class="quiz"><summary>1. Why can't a single perceptron learn XOR?</summary><p>It can only draw one straight line (a hyperplane). XOR's positive points (0,1) and (1,0) lie on a diagonal opposite the negatives, so no line separates them.</p></details>
+  <details class="quiz"><summary>2. What does the learning rate control in gradient descent?</summary><p>The size of each weight update. Too large and training overshoots or diverges; too small and it learns very slowly.</p></details>
+</section>
+
+<section class="chapter" id="ch10">
+  <div class="chapter-head"><div class="week">10</div><div class="kicker">Week 10 · LLMs, generative AI and AI safety</div><h2>Qadam learns to talk, and to be careful</h2></div>
+  <div class="story"><span class="avatar" data-avatar="bilim"></span><p>The warehouse installs a language model so workers can ask Qadam questions in plain words: "Where is the parcel for Karaganda?" <b>Professor Bilim:</b> "Now the most important lesson: a fluent answer is not the same as a true one."</p></div>
+  <h3>How a large language model works</h3>
+  <ol>
+    <li><b>Tokens</b>: text is split into pieces (words or sub-words), each mapped to an <b>embedding</b>, a vector of numbers in which related meanings lie close together.</li>
+    <li><b>Transformer</b>: the architecture introduced in "Attention Is All You Need" (Vaswani et al., 2017). In <b>self-attention</b> every token builds a query, key and value vector and takes a weighted mix of the other tokens' values, with weights softmax(QKᵀ / √d). This lets "it" in a sentence attend to the noun it refers to. Vision Transformers apply the same idea to image patches.</li>
+    <li><b>Pre-training</b>: the model learns to predict the next token on enormous amounts of text. Nothing more is in the training objective.</li>
+    <li><b>Fine-tuning and alignment</b>: further training on instructions and on human preference feedback (for example RLHF, which uses reinforcement learning from Chapter 5) makes it more helpful and less harmful.</li>
+    <li><b>Generation</b>: the model outputs a probability distribution over the next token; a token is sampled, appended, and the process repeats.</li>
+  </ol>
+  <div class="demo" id="demo-temp">
+    <h4>Live experiment 6 · Sampling temperature</h4>
+    <p>After "The parcel is in zone ...", suppose the model's raw scores (logits) are A = 2.0, B = 1.0, C = 0.1. Temperature T divides the logits before the softmax.</p>
+    <div class="controls"><label for="t-slider">Temperature T</label><input type="range" id="t-slider" min="0.1" max="3" step="0.1" value="1"><span class="mono" id="t-val">1.0</span><button id="t-sample">Sample 20 next tokens</button></div>
+    <div class="barrow"><span>"A"</span><div class="bar" id="t-a"></div><span id="t-va"></span></div>
+    <div class="barrow"><span>"B"</span><div class="bar" id="t-b"></div><span id="t-vb"></span></div>
+    <div class="barrow"><span>"C"</span><div class="bar" id="t-c"></div><span id="t-vc"></span></div>
+    <div class="readout" id="t-out" aria-live="polite">Press Sample to draw tokens.</div>
+    <p>At T = 0.5 the model picks A 86% of the time (focused, repetitive); at T = 2 only 50% (creative, but more likely to drift into nonsense).</p>
+  </div>
+  <h3>What generative AI can and cannot do</h3>
+  <ul>
+    <li><b>Hallucination</b>: models can produce confident, fluent statements that are false, including invented citations, because they generate likely text, not verified facts.</li>
+    <li><b>Knowledge cut-off and no built-in fact checking</b>: without tools such as search, a model knows only its training data.</li>
+    <li><b>Strengths</b>: drafting, summarising, translating, explaining, writing and checking code, brainstorming.</li>
+  </ul>
+  <h3>AI safety and ethics</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Risk</th><th>Example in Qadam's warehouse</th><th>Mitigation</th></tr>
+    <tr><td>Bias and fairness</td><td>A hiring model trained on past data repeats past discrimination</td><td>Audit data and outcomes per group</td></tr>
+    <tr><td>Robustness</td><td>A sticker on a sign fools the camera (adversarial example)</td><td>Adversarial testing, sensor fusion, safe fallbacks</td></tr>
+    <tr><td>Reward misspecification</td><td>Qadam maximises "boxes moved" by moving the same box back and forth</td><td>Careful objectives, human oversight</td></tr>
+    <tr><td>Privacy</td><td>Camera footage of workers uploaded to an external AI service</td><td>Data minimisation, consent, on-device processing</td></tr>
+    <tr><td>Misuse and over-trust</td><td>A worker follows a hallucinated instruction without checking</td><td>Show uncertainty, keep a human in the loop</td></tr>
+    <tr><td>Transparency</td><td>Nobody can explain why a parcel was rejected</td><td>Explainable models, decision logs</td></tr>
+  </table></div>
+  <div class="mythfact"><div class="myth"><b>Myth</b>A language model "knows" it is telling the truth.</div><div class="fact"><b>Fact</b>It produces probable continuations. Truthfulness has to be encouraged by training and checked by people and tools.</div></div>
+  <div class="quizhead">Mini-quiz</div>
+  <details class="quiz"><summary>1. What does a language model learn during pre-training?</summary><p>To predict the next token of text. Abilities such as answering questions emerge from doing that prediction well on huge data, then are shaped by fine-tuning.</p></details>
+  <details class="quiz"><summary>2. Why is temperature 0 (always the most likely token) not always best?</summary><p>It is deterministic and safe for factual lookups, but it can become repetitive and dull for creative tasks. The right setting depends on the task.</p></details>
+</section>
+
+<section class="chapter" id="epilogue">
+  <div class="chapter-head"><div class="week">✦</div><div class="kicker">Epilogue</div><h2>What Qadam learned, and what it still cannot do</h2></div>
+  <div class="story"><span class="avatar" data-avatar="qadam"></span><p>Ten weeks later, Qadam plans routes with A*, avoids the risky spill with a learned policy, trusts its sensor exactly as much as Bayes allows, finds itself in the fog with an HMM, reads labels with a neural network and answers questions in words. <b>Aru:</b> "Does Qadam understand the warehouse now?" <b>Professor Bilim:</b> "It predicts it very well. Understanding would mean explaining why, and adapting to situations it has never seen. That is the open question you will study next."</p></div>
+  <h3>AI vs human: who is better at what?</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Task</th><th>AI today</th><th>Humans</th></tr>
+    <tr><td>Searching millions of positions (chess, Go)</td><td>Superhuman</td><td>Much slower, but use intuition well</td></tr>
+    <tr><td>Exact probability updates</td><td>Exact and consistent</td><td>Prone to base-rate neglect</td></tr>
+    <tr><td>Learning from a handful of examples</td><td>Usually needs much data</td><td>Very good</td></tr>
+    <tr><td>Common sense in new situations</td><td>Brittle</td><td>Strong</td></tr>
+    <tr><td>Explaining responsibility and values</td><td>Cannot be held responsible</td><td>Responsible for decisions</td></tr>
+  </table></div>
+  <h3>A short history of AI</h3>
+  <ul class="timeline">
+    <li><span class="yr">1950</span>Alan Turing asks "Can machines think?" and proposes the imitation game.</li>
+    <li><span class="yr">1956</span>The Dartmouth workshop names the field "artificial intelligence".</li>
+    <li><span class="yr">1958</span>Rosenblatt's perceptron learns from examples.</li>
+    <li><span class="yr">1968</span>A* search is published for the robot Shakey.</li>
+    <li><span class="yr">1969</span>Minsky and Papert show the limits of single-layer perceptrons; neural research slows.</li>
+    <li><span class="yr">1986</span>Backpropagation is popularised by Rumelhart, Hinton and Williams.</li>
+    <li><span class="yr">1988</span>Judea Pearl's book makes Bayesian networks a standard tool.</li>
+    <li><span class="yr">1989</span>Watkins introduces Q-learning; Rabiner's HMM tutorial spreads speech recognition methods.</li>
+    <li><span class="yr">1997</span>Deep Blue defeats Garry Kasparov at chess.</li>
+    <li><span class="yr">2012</span>AlexNet wins ImageNet with a deep CNN; the deep-learning era begins.</li>
+    <li><span class="yr">2016</span>AlphaGo defeats Lee Sedol at Go.</li>
+    <li><span class="yr">2017</span>The Transformer architecture is introduced.</li>
+    <li><span class="yr">2022</span>ChatGPT brings large language models to the public.</li>
+  </ul>
+  <h3>Myth vs fact: the big ones</h3>
+  <div class="mythfact"><div class="myth"><b>Myth</b>More data and a bigger model always mean a correct answer.</div><div class="fact"><b>Fact</b>In our Lab 7 the largest model, VGG19 (143.7 million parameters), mislabelled a rocket; confidence and size are not proof.</div></div>
+  <div class="mythfact"><div class="myth"><b>Myth</b>AI is objective because it is mathematics.</div><div class="fact"><b>Fact</b>Models inherit the assumptions in their data, priors and reward functions, as every chapter of this book showed.</div></div>
+</section>
+
+<section class="chapter" id="glossary">
+  <div class="chapter-head"><div class="week">A–Z</div><div class="kicker">Reference</div><h2>Glossary</h2></div>
+  <dl class="gloss">
+    <dt>Admissible heuristic</dt><dd>Never overestimates the true remaining cost; makes A* tree search optimal.</dd>
+    <dt>Agent</dt><dd>Anything that perceives its environment with sensors and acts with actuators.</dd>
+    <dt>Alpha-beta pruning</dt><dd>Skips game-tree branches that cannot change the minimax decision.</dd>
+    <dt>Backpropagation</dt><dd>Computes the gradient of the loss for every weight using the chain rule, layer by layer backwards.</dd>
+    <dt>Bayes' rule</dt><dd>P(A | B) = P(B | A) P(A) / P(B); updates a belief with evidence.</dd>
+    <dt>Bayesian network</dt><dd>Directed acyclic graph of variables with a conditional probability table per node.</dd>
+    <dt>Bellman equation</dt><dd>U(s) = R(s) + γ max<sub>a</sub> Σ P(s′|s,a) U(s′); defines optimal utilities in an MDP.</dd>
+    <dt>Constraint satisfaction problem</dt><dd>Variables, domains and constraints; solved by backtracking with heuristics and propagation.</dd>
+    <dt>Discount factor γ</dt><dd>Weight between 0 and 1 that makes future rewards worth less than immediate ones.</dd>
+    <dt>Emission model</dt><dd>P(observation | hidden state) in an HMM: how the sensor behaves in each state.</dd>
+    <dt>Filtering</dt><dd>Computing the belief about the current hidden state from all evidence so far (predict, update, normalise).</dd>
+    <dt>Heuristic</dt><dd>An estimate h(n) of the cost from a state to the goal.</dd>
+    <dt>Hallucination</dt><dd>A fluent but false output of a generative model.</dd>
+    <dt>Markov property</dt><dd>The future depends only on the present state, not on the past history.</dd>
+    <dt>Minimax</dt><dd>Chooses the move that maximises the worst-case outcome against an optimal opponent.</dd>
+    <dt>Overfitting</dt><dd>Fitting the training data so closely that performance on new data drops.</dd>
+    <dt>Perceptron</dt><dd>A single artificial neuron with a step activation; learns linear decision boundaries.</dd>
+    <dt>Policy π</dt><dd>A mapping from states to actions.</dd>
+    <dt>Precision / recall</dt><dd>Of the predicted positives, the share that is correct / of the real positives, the share that is found.</dd>
+    <dt>Q-learning</dt><dd>Model-free reinforcement learning that learns action values Q(s, a) from experience.</dd>
+    <dt>Rational agent</dt><dd>Selects the action expected to maximise its performance measure.</dd>
+    <dt>Self-attention</dt><dd>Each token weighs every other token to build its representation; the core of the Transformer.</dd>
+    <dt>Simulated annealing</dt><dd>Local search that sometimes accepts worse moves, with a probability that falls as the temperature drops.</dd>
+    <dt>Token</dt><dd>A unit of text (word or sub-word) processed by a language model.</dd>
+    <dt>Transfer learning</dt><dd>Reusing a model trained on one task as the starting point for another.</dd>
+  </dl>
+</section>
+
+<section class="chapter" id="refs">
+  <div class="chapter-head"><div class="week">✎</div><div class="kicker">Back matter</div><h2>Sources, team and AI use</h2></div>
+  <h3>Sources</h3>
+  <ol class="refs">
+    <li>Russell, S. J., &amp; Norvig, P. (2020). <i>Artificial Intelligence: A Modern Approach</i> (4th ed.). Pearson. Main course textbook; the 4 × 3 grid world and the alpha-beta tree follow its examples.</li>
+    <li>QAIRU AI Fundamentals (AIF1303) syllabus, lecture notes and lab guides, 2026: Practices 6–7, Assignment 3, Labs 6–7.</li>
+    <li>Hart, P. E., Nilsson, N. J., &amp; Raphael, B. (1968). A formal basis for the heuristic determination of minimum cost paths. <i>IEEE Transactions on Systems Science and Cybernetics</i>, 4(2), 100–107.</li>
+    <li>Kirkpatrick, S., Gelatt, C. D., &amp; Vecchi, M. P. (1983). Optimization by simulated annealing. <i>Science</i>, 220(4598), 671–680.</li>
+    <li>Sutton, R. S., &amp; Barto, A. G. (2018). <i>Reinforcement Learning: An Introduction</i> (2nd ed.). MIT Press.</li>
+    <li>Watkins, C. J. C. H., &amp; Dayan, P. (1992). Q-learning. <i>Machine Learning</i>, 8, 279–292.</li>
+    <li>Pearl, J. (1988). <i>Probabilistic Reasoning in Intelligent Systems</i>. Morgan Kaufmann.</li>
+    <li>Rabiner, L. R. (1989). A tutorial on hidden Markov models and selected applications in speech recognition. <i>Proceedings of the IEEE</i>, 77(2), 257–286.</li>
+    <li>Rosenblatt, F. (1958). The perceptron: a probabilistic model for information storage and organization in the brain. <i>Psychological Review</i>, 65(6), 386–408.</li>
+    <li>Rumelhart, D. E., Hinton, G. E., &amp; Williams, R. J. (1986). Learning representations by back-propagating errors. <i>Nature</i>, 323, 533–536.</li>
+    <li>Goodfellow, I., Bengio, Y., &amp; Courville, A. (2016). <i>Deep Learning</i>. MIT Press.</li>
+    <li>Vaswani, A., et al. (2017). Attention is all you need. <i>Advances in Neural Information Processing Systems</i>, 30.</li>
+    <li>Zerilli, J. (2021). <i>A Citizen's Guide to Artificial Intelligence</i>. MIT Press.</li>
+  </ol>
+  <h3>Team and contributions</h3>
+  <p>Team ___ · Members: ____________________. All numbers in the worked examples were recomputed in Python; the live experiments run the algorithms described in the text.</p>
+  <h3>AI use declaration</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Tool</th><th>Purpose</th><th>What it produced</th><th>How we verified it</th></tr>
+    <tr><td>Claude (Anthropic)</td><td>Structuring the book, drafting explanations, writing the HTML, CSS and JavaScript demos, drawing the original characters and diagrams</td><td>Page layout, demo code, draft text for all chapters</td><td>Checked every definition against Russell &amp; Norvig and the lecture notes; recomputed all worked numbers in Python (Bayes 0.6316, HMM 0.5058, value iteration 0.705, perceptron AND in 6 epochs); ran every demo</td></tr>
+  </table></div>
+  <p style="color:var(--muted);font-family:var(--sans);font-size:.85rem">The characters Qadam, Aru and Professor Bilim are original drawings made for this book. The illustrations are inline vector drawings; no external images are used.</p>
+</section>
+
+</main>
+</div>
+
+<style>
+.story { display: grid; grid-template-columns: 96px 1fr; gap: 16px; align-items: center; }
+.story > p { margin: 0; }
+.story .avatar { width: 96px; height: 96px; display: block; }
+.story .avatar svg, .cast .avatar svg { width: 100%; height: 100%; display: block; }
+.cast .avatar { width: 88px; height: 88px; display: block; margin-bottom: 6px; }
+@media (max-width: 520px) { .story { grid-template-columns: 64px 1fr; } .story .avatar { width: 64px; height: 64px; } }
+</style>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- original anime-style characters (inline SVG) ---------- */
+  var AV = {
+    aru: '<svg viewBox="0 0 120 120" role="img" aria-label="Aru, a student with long dark hair and big blue eyes">' +
+      '<circle cx="60" cy="60" r="58" fill="#d4eef3"/>' +
+      '<path d="M22 64 C18 30 40 14 60 14 C82 14 102 30 98 64 L104 112 L16 112 Z" fill="#262a45"/>' +
+      '<rect x="52" y="86" width="16" height="12" fill="#ffd9c2"/>' +
+      '<path d="M28 112 C30 96 44 92 60 98 C76 92 90 96 92 112 Z" fill="#ffffff"/>' +
+      '<path d="M44 96 L60 112 L76 96 L84 104 L60 114 L36 104 Z" fill="#0088a3"/>' +
+      '<ellipse cx="60" cy="62" rx="29" ry="31" fill="#ffe4d1"/>' +
+      '<path d="M30 56 C30 30 48 22 62 22 C80 22 92 34 91 56 L84 46 L78 56 L70 42 L62 56 L54 42 L46 56 L40 46 Z" fill="#262a45"/>' +
+      '<path d="M86 34 l4 -8 l4 8 l-8 -5 h8 z" fill="#f0b93a"/>' +
+      '<ellipse cx="48" cy="67" rx="7" ry="9" fill="#262a45"/><ellipse cx="48" cy="69" rx="5" ry="6.5" fill="#1aa3c0"/>' +
+      '<circle cx="46" cy="64" r="2.6" fill="#fff"/><circle cx="50" cy="72" r="1.2" fill="#fff"/>' +
+      '<ellipse cx="72" cy="67" rx="7" ry="9" fill="#262a45"/><ellipse cx="72" cy="69" rx="5" ry="6.5" fill="#1aa3c0"/>' +
+      '<circle cx="70" cy="64" r="2.6" fill="#fff"/><circle cx="74" cy="72" r="1.2" fill="#fff"/>' +
+      '<path d="M40 55 q8 -4 15 0 M65 55 q8 -4 15 0" stroke="#262a45" stroke-width="2" fill="none" stroke-linecap="round"/>' +
+      '<ellipse cx="40" cy="80" rx="5" ry="2.6" fill="#ff8fa3" opacity=".55"/><ellipse cx="80" cy="80" rx="5" ry="2.6" fill="#ff8fa3" opacity=".55"/>' +
+      '<path d="M55 82 q5 4 10 0" stroke="#a0525c" stroke-width="2" fill="none" stroke-linecap="round"/>' +
+      '</svg>',
+    bilim: '<svg viewBox="0 0 120 120" role="img" aria-label="Professor Bilim, a teacher with spiky silver hair and round glasses">' +
+      '<circle cx="60" cy="60" r="58" fill="#fbecc6"/>' +
+      '<path d="M24 112 C26 94 42 88 60 92 C78 88 94 94 96 112 Z" fill="#17212e"/>' +
+      '<path d="M44 92 C50 100 70 100 76 92 L80 100 C70 108 50 108 40 100 Z" fill="#c98a00"/>' +
+      '<rect x="52" y="82" width="16" height="12" fill="#f3cfb2"/>' +
+      '<ellipse cx="60" cy="60" rx="28" ry="30" fill="#f6d8bf"/>' +
+      '<path d="M28 54 L24 30 L38 40 L40 18 L52 34 L60 12 L68 34 L80 18 L82 40 L96 30 L92 54 L84 42 L74 50 L66 38 L56 50 L46 40 L36 50 Z" fill="#dfe5ec" stroke="#aab4c0" stroke-width="1"/>' +
+      '<circle cx="48" cy="63" r="9" fill="#ffffff" fill-opacity=".35" stroke="#17212e" stroke-width="2.4"/>' +
+      '<circle cx="72" cy="63" r="9" fill="#ffffff" fill-opacity=".35" stroke="#17212e" stroke-width="2.4"/>' +
+      '<line x1="57" y1="63" x2="63" y2="63" stroke="#17212e" stroke-width="2.4"/>' +
+      '<ellipse cx="48" cy="64" rx="3.4" ry="4.4" fill="#17212e"/><circle cx="47" cy="62.5" r="1.3" fill="#fff"/>' +
+      '<ellipse cx="72" cy="64" rx="3.4" ry="4.4" fill="#17212e"/><circle cx="71" cy="62.5" r="1.3" fill="#fff"/>' +
+      '<path d="M39 50 l14 2 M67 52 l14 -2" stroke="#8d97a4" stroke-width="2.4" stroke-linecap="round"/>' +
+      '<path d="M50 82 C54 90 66 90 70 82 C66 86 54 86 50 82 Z" fill="#c9d1da"/>' +
+      '<path d="M54 78 q6 3 12 0" stroke="#7a4b3a" stroke-width="2" fill="none" stroke-linecap="round"/>' +
+      '</svg>',
+    qadam: '<svg viewBox="0 0 120 120" role="img" aria-label="Qadam, a small robot with a screen face and big shining eyes">' +
+      '<circle cx="60" cy="60" r="58" fill="#d4eef3"/>' +
+      '<line x1="60" y1="24" x2="60" y2="10" stroke="#5b6878" stroke-width="3"/><circle cx="60" cy="9" r="6" fill="#f0b93a"/>' +
+      '<rect x="14" y="24" width="92" height="74" rx="24" fill="#e6ebf1" stroke="#9aa7b6" stroke-width="2"/>' +
+      '<rect x="8" y="48" width="10" height="24" rx="5" fill="#0088a3"/><rect x="102" y="48" width="10" height="24" rx="5" fill="#0088a3"/>' +
+      '<rect x="26" y="36" width="68" height="50" rx="16" fill="#17212e"/>' +
+      '<ellipse cx="46" cy="60" rx="9" ry="12" fill="#3cc4dc"/><ellipse cx="46" cy="62" rx="5" ry="7" fill="#0b6f86"/>' +
+      '<circle cx="43" cy="55" r="3.4" fill="#fff"/><circle cx="49" cy="66" r="1.4" fill="#fff"/>' +
+      '<ellipse cx="74" cy="60" rx="9" ry="12" fill="#3cc4dc"/><ellipse cx="74" cy="62" rx="5" ry="7" fill="#0b6f86"/>' +
+      '<circle cx="71" cy="55" r="3.4" fill="#fff"/><circle cx="77" cy="66" r="1.4" fill="#fff"/>' +
+      '<rect x="32" y="74" width="8" height="3" rx="1.5" fill="#ff8fa3"/><rect x="80" y="74" width="8" height="3" rx="1.5" fill="#ff8fa3"/>' +
+      '<path d="M54 76 q6 5 12 0" stroke="#3cc4dc" stroke-width="2.4" fill="none" stroke-linecap="round"/>' +
+      '<rect x="40" y="98" width="40" height="16" rx="6" fill="#0088a3"/>' +
+      '</svg>'
+  };
+  document.querySelectorAll("[data-avatar]").forEach(function (el) {
+    var svg = AV[el.getAttribute("data-avatar")];
+    if (svg) el.innerHTML = svg;
+  });
+
+  /* ---------- 1. grid search ---------- */
+  var COLS = 14, ROWS = 9, START = [1, 7], GOAL = [12, 1];
+  var DEFAULT_WALLS = [[4,0],[4,1],[4,2],[4,3],[4,4],[4,5],[8,3],[8,4],[8,5],[8,6],[8,7],[8,8],[10,0],[10,1],[10,2],[11,2],[12,2],[6,6],[5,6],[2,4],[1,4],[3,4]];
+  var walls = new Set();
+  var gridEl = document.getElementById("search-grid");
+  var outEl = document.getElementById("search-out");
+  var cells = [];
+  var key = function (x, y) { return x + "," + y; };
+  function resetWalls() { walls = new Set(DEFAULT_WALLS.map(function (p) { return key(p[0], p[1]); })); }
+  function buildGrid() {
+    gridEl.innerHTML = ""; cells = [];
+    for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) {
+      var d = document.createElement("div");
+      d.dataset.x = x; d.dataset.y = y;
+      d.setAttribute("role", "button"); d.setAttribute("tabindex", "-1");
+      d.setAttribute("aria-label", "cell " + x + "," + y);
+      d.addEventListener("click", toggleWall);
+      gridEl.appendChild(d); cells.push(d);
+    }
+    paint([], []);
+  }
+  function cellEl(x, y) { return cells[y * COLS + x]; }
+  function paint(seen, path) {
+    cells.forEach(function (c) {
+      var x = +c.dataset.x, y = +c.dataset.y, k = key(x, y);
+      c.className = walls.has(k) ? "wall" : "";
+      if (x === START[0] && y === START[1]) c.className = "start";
+      if (x === GOAL[0] && y === GOAL[1]) c.className = "goal";
+    });
+    seen.forEach(function (k) { var p = k.split(","); var c = cellEl(+p[0], +p[1]); if (!c.className) c.className = "seen"; });
+    path.forEach(function (k) { var p = k.split(","); var c = cellEl(+p[0], +p[1]); if (c.className === "seen" || !c.className) c.className = "path"; });
+  }
+  function toggleWall(e) {
+    var x = +e.currentTarget.dataset.x, y = +e.currentTarget.dataset.y, k = key(x, y);
+    if ((x === START[0] && y === START[1]) || (x === GOAL[0] && y === GOAL[1])) return;
+    if (walls.has(k)) walls.delete(k); else walls.add(k);
+    paint([], []); outEl.textContent = "Racks changed. Run an algorithm.";
+  }
+  function neighbours(x, y) {
+    var out = [];
+    [[0, -1], [1, 0], [0, 1], [-1, 0]].forEach(function (d) {
+      var nx = x + d[0], ny = y + d[1];
+      if (nx >= 0 && ny >= 0 && nx < COLS && ny < ROWS && !walls.has(key(nx, ny))) out.push([nx, ny]);
+    });
+    return out;
+  }
+  var manhattan = function (x, y) { return Math.abs(x - GOAL[0]) + Math.abs(y - GOAL[1]); };
+  function search(alg) {
+    var startK = key(START[0], START[1]), goalK = key(GOAL[0], GOAL[1]);
+    var parent = {}; parent[startK] = null;
+    var g = {}; g[startK] = 0;
+    var expanded = [], closed = new Set();
+    var frontier = [{ x: START[0], y: START[1], f: 0, n: 0 }], counter = 1;
+    while (frontier.length) {
+      var cur;
+      if (alg === "bfs") cur = frontier.shift();
+      else if (alg === "dfs") cur = frontier.pop();
+      else {
+        var bi = 0;
+        for (var i = 1; i < frontier.length; i++) {
+          var a = frontier[i], b = frontier[bi];
+          if (a.f < b.f || (a.f === b.f && a.n < b.n)) bi = i;
+        }
+        cur = frontier.splice(bi, 1)[0];
+      }
+      var ck = key(cur.x, cur.y);
+      if (closed.has(ck)) continue;
+      closed.add(ck); expanded.push(ck);
+      if (ck === goalK) break;
+      neighbours(cur.x, cur.y).forEach(function (nb) {
+        var nk = key(nb[0], nb[1]);
+        if (closed.has(nk)) return;
+        var ng = g[ck] + 1;
+        if (alg === "bfs" || alg === "dfs") {
+          if (nk in parent) return;
+          parent[nk] = ck; g[nk] = ng;
+          frontier.push({ x: nb[0], y: nb[1], f: 0, n: counter++ });
+        } else if (!(nk in g) || ng < g[nk]) {
+          g[nk] = ng; parent[nk] = ck;
+          var f = alg === "astar" ? ng + manhattan(nb[0], nb[1]) : manhattan(nb[0], nb[1]);
+          frontier.push({ x: nb[0], y: nb[1], f: f, n: counter++ });
+        }
+      });
+    }
+    var path = [];
+    if (goalK in parent) { var k = goalK; while (k) { path.unshift(k); k = parent[k]; } }
+    return { expanded: expanded, path: path };
+  }
+  var NAMES = { bfs: "Breadth-first search", dfs: "Depth-first search", astar: "A* with Manhattan distance", greedy: "Greedy best-first" };
+  var timer = null;
+  document.querySelectorAll("#demo-search [data-alg]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var alg = btn.getAttribute("data-alg");
+      var r = search(alg);
+      clearInterval(timer);
+      var i = 0, step = Math.max(1, Math.ceil(r.expanded.length / 40));
+      var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      function finish() {
+        paint(r.expanded, r.path);
+        outEl.textContent = NAMES[alg] + ": expanded " + r.expanded.length + " cells, " +
+          (r.path.length ? "path length " + (r.path.length - 1) + " moves." : "no path exists.");
+      }
+      if (reduce) { finish(); return; }
+      timer = setInterval(function () {
+        i += step;
+        if (i >= r.expanded.length) { clearInterval(timer); finish(); return; }
+        paint(r.expanded.slice(0, i), []);
+        outEl.textContent = NAMES[alg] + ": expanding… " + i + " cells";
+      }, 30);
+    });
+  });
+  document.getElementById("search-reset").addEventListener("click", function () { clearInterval(timer); resetWalls(); paint([], []); outEl.textContent = "Racks reset. Choose an algorithm."; });
+  resetWalls(); buildGrid();
+
+  /* ---------- 2. value iteration ---------- */
+  var VI = { W: 4, H: 3, wall: "2,2", term: { "4,3": 1, "4,2": -1 }, R: -0.04, gamma: 1 };
+  var viStates = [];
+  for (var vx = 1; vx <= 4; vx++) for (var vy = 1; vy <= 3; vy++) if (key(vx, vy) !== VI.wall) viStates.push([vx, vy]);
+  var MOVES = { U: [0, 1], D: [0, -1], L: [-1, 0], R: [1, 0] };
+  var PERP = { U: ["L", "R"], D: ["L", "R"], L: ["U", "D"], R: ["U", "D"] };
+  var ARROWS = { U: "↑", D: "↓", L: "←", R: "→" };
+  var U = {}, viIter = 0;
+  function viReset() { U = {}; viStates.forEach(function (s) { U[key(s[0], s[1])] = 0; }); viIter = 0; viRender(); }
+  function mv(s, a) {
+    var n = [s[0] + MOVES[a][0], s[1] + MOVES[a][1]], nk = key(n[0], n[1]);
+    return (nk in U) ? nk : key(s[0], s[1]);
+  }
+  function q(s, a, Uc) { return 0.8 * Uc[mv(s, a)] + 0.1 * Uc[mv(s, PERP[a][0])] + 0.1 * Uc[mv(s, PERP[a][1])]; }
+  function viStep() {
+    var N = {};
+    viStates.forEach(function (s) {
+      var k = key(s[0], s[1]);
+      if (k in VI.term) { N[k] = VI.term[k]; return; }
+      var best = -Infinity;
+      Object.keys(MOVES).forEach(function (a) { best = Math.max(best, q(s, a, U)); });
+      N[k] = VI.R + VI.gamma * best;
+    });
+    U = N; viIter++;
+  }
+  function bestAction(s) {
+    var best = null, bv = -Infinity;
+    ["U", "R", "D", "L"].forEach(function (a) { var v = q(s, a, U); if (v > bv + 1e-12) { bv = v; best = a; } });
+    return best;
+  }
+  function viRender() {
+    var el = document.getElementById("vi-grid"); el.innerHTML = "";
+    for (var y = 3; y >= 1; y--) for (var x = 1; x <= 4; x++) {
+      var d = document.createElement("div"), k = key(x, y);
+      if (k === VI.wall) { d.style.background = "var(--ink)"; d.innerHTML = "&nbsp;"; }
+      else if (k in VI.term) { d.style.background = VI.term[k] > 0 ? "color-mix(in srgb, var(--good) 25%, transparent)" : "color-mix(in srgb, var(--bad) 25%, transparent)"; d.textContent = (VI.term[k] > 0 ? "+1" : "−1"); }
+      else { d.innerHTML = '<span class="num">' + U[k].toFixed(3) + "</span>" + (viIter ? '<span class="arrow">' + ARROWS[bestAction([x, y])] + "</span>" : ""); }
+      el.appendChild(d);
+    }
+    document.getElementById("vi-iter").textContent = "iteration " + viIter;
+  }
+  document.getElementById("vi-step").addEventListener("click", function () { viStep(); viRender(); });
+  document.getElementById("vi-run").addEventListener("click", function () {
+    for (var i = 0; i < 500; i++) {
+      var old = Object.assign({}, U); viStep();
+      var delta = 0; Object.keys(U).forEach(function (k) { delta = Math.max(delta, Math.abs(U[k] - old[k])); });
+      if (delta < 1e-6) break;
+    }
+    viRender();
+  });
+  document.getElementById("vi-reset").addEventListener("click", viReset);
+  viReset();
+
+  /* ---------- 3. Bayes calculator ---------- */
+  function bayes() {
+    var p = +document.getElementById("b-prior").value, h = +document.getElementById("b-hit").value, f = +document.getElementById("b-fa").value;
+    document.getElementById("b-prior-v").textContent = p.toFixed(2);
+    document.getElementById("b-hit-v").textContent = h.toFixed(2);
+    document.getElementById("b-fa-v").textContent = f.toFixed(2);
+    var afterB = h * p / (h * p + f * (1 - p));
+    var afterC = (1 - h) * p / ((1 - h) * p + (1 - f) * (1 - p));
+    [[p, 0], [afterB, 1], [afterC, 2]].forEach(function (v) {
+      document.getElementById("b-bar" + v[1]).style.width = (v[0] * 100).toFixed(1) + "%";
+      document.getElementById("b-out" + v[1]).textContent = v[0].toFixed(3);
+    });
+  }
+  ["b-prior", "b-hit", "b-fa"].forEach(function (id) { document.getElementById(id).addEventListener("input", bayes); });
+  bayes();
+
+  /* ---------- 4. HMM filter ---------- */
+  var T = [[0.7, 0.3, 0.0], [0.2, 0.6, 0.2], [0.0, 0.3, 0.7]];
+  var EM = { RED: [0.8, 0.5, 0.2], BLUE: [0.2, 0.5, 0.8] };
+  var belief, hmmT, hmmLog;
+  function fmt(v) { return "[" + v.map(function (x) { return x.toFixed(4); }).join(", ") + "]"; }
+  function hmmReset() { belief = [0.5, 0.3, 0.2]; hmmT = 0; hmmLog = ["t = 0, belief b₀ = [0.500, 0.300, 0.200]"]; hmmRender(); }
+  function hmmObserve(obs) {
+    var pred = [0, 1, 2].map(function (j) { return belief[0] * T[0][j] + belief[1] * T[1][j] + belief[2] * T[2][j]; });
+    var w = pred.map(function (p, j) { return p * EM[obs][j]; });
+    var z = w[0] + w[1] + w[2];
+    belief = w.map(function (x) { return x / z; });
+    hmmT++;
+    var best = ["A", "B", "C"][belief.indexOf(Math.max.apply(null, belief))];
+    hmmLog.push("t = " + hmmT + ", " + obs + ": predicted " + fmt(pred) + ", Z = " + z.toFixed(6) + " → belief " + fmt(belief) + ", most likely " + best);
+    hmmRender();
+  }
+  function hmmRender() {
+    ["a", "b", "c"].forEach(function (z, i) {
+      document.getElementById("hmm-" + z).style.width = (belief[i] * 100).toFixed(1) + "%";
+      document.getElementById("hmm-v" + z).textContent = belief[i].toFixed(3);
+    });
+    document.getElementById("hmm-log").innerHTML = hmmLog.slice(-5).map(function (l) { return l.replace(/&/g, "&amp;").replace(/</g, "&lt;"); }).join("<br>");
+  }
+  document.getElementById("hmm-red").addEventListener("click", function () { hmmObserve("RED"); });
+  document.getElementById("hmm-blue").addEventListener("click", function () { hmmObserve("BLUE"); });
+  document.getElementById("hmm-story").addEventListener("click", function () { hmmReset(); ["RED", "BLUE", "BLUE", "RED"].forEach(hmmObserve); });
+  document.getElementById("hmm-reset").addEventListener("click", hmmReset);
+  hmmReset();
+
+  /* ---------- 5. perceptron ---------- */
+  var GATES = { and: [0, 0, 0, 1], or: [0, 1, 1, 1], xor: [0, 1, 1, 0] };
+  var PTS = [[0, 0], [0, 1], [1, 0], [1, 1]];
+  var w = [0, 0, 0], pEpoch = 0, pDone = false, lastErr = null;
+  var cv = document.getElementById("p-canvas"), ctx = cv.getContext("2d");
+  var gateSel = document.getElementById("p-gate");
+  function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || "#000"; }
+  function toPx(x, y) { return [(x + 0.5) / 2 * cv.width, cv.height - (y + 0.5) / 2 * cv.height]; }
+  function pDraw() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.fillStyle = css("--page"); ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.strokeStyle = css("--line"); ctx.lineWidth = 1;
+    [0, 1].forEach(function (v) { var a = toPx(v, -0.5), b = toPx(v, 1.5); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); var c = toPx(-0.5, v), d = toPx(1.5, v); ctx.beginPath(); ctx.moveTo(c[0], c[1]); ctx.lineTo(d[0], d[1]); ctx.stroke(); });
+    if (w[1] !== 0 || w[2] !== 0) {
+      ctx.strokeStyle = css("--sun"); ctx.lineWidth = 3; ctx.beginPath();
+      if (Math.abs(w[2]) > 1e-9) { var p1 = toPx(-0.5, -(w[0] + w[1] * -0.5) / w[2]), p2 = toPx(1.5, -(w[0] + w[1] * 1.5) / w[2]); ctx.moveTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]); }
+      else { var xx = -w[0] / w[1], q1 = toPx(xx, -0.5), q2 = toPx(xx, 1.5); ctx.moveTo(q1[0], q1[1]); ctx.lineTo(q2[0], q2[1]); }
+      ctx.stroke();
+    }
+    var t = GATES[gateSel.value];
+    PTS.forEach(function (p, i) {
+      var c = toPx(p[0], p[1]); ctx.beginPath(); ctx.arc(c[0], c[1], 14, 0, Math.PI * 2);
+      ctx.fillStyle = t[i] ? css("--sky") : css("--page"); ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = css("--sky"); ctx.stroke();
+      ctx.fillStyle = css("--ink"); ctx.font = "13px IBM Plex Mono, monospace"; ctx.fillText("(" + p[0] + "," + p[1] + ")", c[0] - 22, c[1] + 32);
+    });
+  }
+  function pOut() {
+    var msg = "weights w₀ = " + w[0] + ", w₁ = " + w[1] + ", w₂ = " + w[2] + " · epoch " + pEpoch;
+    if (lastErr !== null) msg += " · errors in last epoch: " + lastErr;
+    if (pDone) msg += " · converged: every point classified correctly";
+    else if (gateSel.value === "xor" && pEpoch >= 20) msg += " · still wrong after " + pEpoch + " epochs: XOR is not linearly separable";
+    document.getElementById("p-out").textContent = msg;
+  }
+  function pEpochRun() {
+    if (pDone) return;
+    var t = GATES[gateSel.value], err = 0;
+    PTS.forEach(function (p, i) {
+      var o = (w[0] + w[1] * p[0] + w[2] * p[1]) > 0 ? 1 : 0;
+      if (o !== t[i]) { err++; var d = t[i] - o; w = [w[0] + d, w[1] + d * p[0], w[2] + d * p[1]]; }
+    });
+    pEpoch++; lastErr = err; if (err === 0) pDone = true;
+  }
+  function pReset() { w = [0, 0, 0]; pEpoch = 0; pDone = false; lastErr = null; pDraw(); pOut(); }
+  document.getElementById("p-epoch").addEventListener("click", function () { pEpochRun(); pDraw(); pOut(); });
+  document.getElementById("p-run").addEventListener("click", function () { for (var i = 0; i < 20 && !pDone; i++) pEpochRun(); pDraw(); pOut(); });
+  document.getElementById("p-reset").addEventListener("click", pReset);
+  gateSel.addEventListener("change", pReset);
+  pReset();
+  if (window.matchMedia) window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", pDraw);
+
+  /* ---------- 6. temperature ---------- */
+  var LOGITS = [2.0, 1.0, 0.1];
+  function softmax(T) { var e = LOGITS.map(function (z) { return Math.exp(z / T); }), s = e[0] + e[1] + e[2]; return e.map(function (v) { return v / s; }); }
+  function tRender() {
+    var T = +document.getElementById("t-slider").value, p = softmax(T);
+    document.getElementById("t-val").textContent = T.toFixed(1);
+    ["a", "b", "c"].forEach(function (z, i) {
+      document.getElementById("t-" + z).style.width = (p[i] * 100).toFixed(1) + "%";
+      document.getElementById("t-v" + z).textContent = (p[i] * 100).toFixed(1) + "%";
+    });
+  }
+  document.getElementById("t-slider").addEventListener("input", tRender);
+  document.getElementById("t-sample").addEventListener("click", function () {
+    var p = softmax(+document.getElementById("t-slider").value), s = [];
+    for (var i = 0; i < 20; i++) { var r = Math.random(); s.push(r < p[0] ? "A" : r < p[0] + p[1] ? "B" : "C"); }
+    document.getElementById("t-out").textContent = s.join(" ");
+  });
+  tRender();
+})();
+</script>
+</body>
+</html>
