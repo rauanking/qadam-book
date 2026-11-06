@@ -775,14 +775,31 @@ learning rule:  wᵢ ← wᵢ + η · (target − output) · xᵢ      (x₀ = 1
     <li>Zerilli, J. (2021). <i>A Citizen's Guide to Artificial Intelligence</i>. MIT Press.</li>
   </ol>
   <h3>Author</h3>
-  <p>Bolat Rauan, individual project (team of one): concept, story, structure, review of every chapter and the defense. All numbers in the worked examples were recomputed in Python; the live experiments run the algorithms described in the text.</p>
+  <p>Bolat Rauan, individual project (team of one). How AI tools were used is described in the declaration below.</p>
   <h3>AI use declaration</h3>
+  <p>Course: AIF1303 AI Fundamentals, End-Term Creative Project. Student: Bolat Rauan. AI use was substantive and is declared here as the syllabus requires.</p>
   <div class="tablewrap"><table>
-    <tr><th>Tool</th><th>Purpose</th><th>What it produced</th><th>How we verified it</th></tr>
-    <tr><td>Google Gemini</td><td>Generating the cover and the ten chapter illustrations from our written descriptions of the original characters</td><td>11 anime-style images</td><td>Reviewed every image; regenerated three where a character was duplicated; checked that no existing anime characters or logos appear</td></tr>
-    <tr><td>Claude (Anthropic)</td><td>Structuring the book, drafting explanations, writing the HTML, CSS and JavaScript demos, drawing the original characters and diagrams</td><td>Page layout, demo code, draft text for all chapters</td><td>Checked every definition against Russell &amp; Norvig and the lecture notes; recomputed all worked numbers in Python (Bayes 0.6316, HMM 0.5058, value iteration 0.705, perceptron AND in 6 epochs); ran every demo</td></tr>
+    <tr><th>Who / tool</th><th>Role and contribution</th></tr>
+    <tr><td><b>Bolat Rauan</b> (student)</td><td>Chose to make the book with AI assistance and directed the work: provided the assignment, syllabus and course materials; asked for an anime-inspired style with original characters; chose the title "Qadam Book"; decided to illustrate the chapters with Google Gemini; chose to host the book on GitHub Pages so anyone can open it, created the repository and authorised the upload; reviewed the result and is responsible for explaining every chapter at the defense.</td></tr>
+    <tr><td><b>Claude</b> (Anthropic), via Claude Code, November 2026</td><td>Proposed the story concept (Qadam, Aru, Professor Bilim, Astana warehouse); drafted the text of all chapters, quizzes, glossary and timeline; wrote the HTML, CSS and JavaScript, including the six live demos; drew the diagrams and the small character portraits; wrote the image prompts and ran them in the student's Gemini account; built the presentation card.</td></tr>
+    <tr><td><b>Google Gemini</b>, November 2026</td><td>Generated the cover and the ten chapter illustrations from text descriptions of the original characters.</td></tr>
   </table></div>
-  <p style="color:var(--muted);font-family:var(--sans);font-size:.85rem">The characters Qadam, Aru and Professor Bilim are original drawings made for this book. Chapter illustrations were generated with Google Gemini from our character descriptions; diagrams and the small portraits are inline vector drawings.</p>
+  <h3>Key prompts</h3>
+  <ul>
+    <li>"Create an AI book from the end-term assignment and the syllabus, covering weeks 1–10." (original prompts were written in Russian)</li>
+    <li>"Use anime-style pictures in the design." → original characters were used instead of existing anime characters for copyright reasons.</li>
+    <li>"Make images with Gemini."</li>
+    <li>"Host the book so it opens without Claude." → published on GitHub Pages.</li>
+  </ul>
+  <h3>How the content was verified</h3>
+  <ul>
+    <li>All worked numbers were recomputed in Python (Bayes 0.6316, HMM 0.5058, value iteration 0.705 and 0.918, perceptron AND in 6 epochs, metrics in Chapter 8).</li>
+    <li>Every live demo was run and its output compared with the numbers in the text; one inaccurate statement about A* was corrected with the measured results.</li>
+    <li>Definitions follow Russell &amp; Norvig, <i>Artificial Intelligence: A Modern Approach</i>, and the course lectures and practice sessions.</li>
+    <li>Every illustration was reviewed; three were regenerated because a character appeared more than once.</li>
+  </ul>
+  <p><b>Student statement.</b> I confirm that I am responsible for the final work and have accurately disclosed the use of AI. — Bolat Rauan</p>
+  <p style="color:var(--muted);font-family:var(--sans);font-size:.85rem">The characters Qadam, Aru and Professor Bilim are original. Chapter illustrations were generated with Google Gemini; diagrams and the small portraits are inline vector drawings.</p>
 </section>
 
 </main>
